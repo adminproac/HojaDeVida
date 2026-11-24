@@ -8,7 +8,7 @@
       "es"
     ],
     "source": "CV PDF provided by the owner (JESUS EDGAR DUARTE)",
-    "lastUpdated": "2026-11-24T21:53:59.261Z"
+    "lastUpdated": "2026-11-24T22:01:16.821Z"
   },
   "schema": {
     "conventions": {
@@ -2164,6 +2164,34 @@
         "email": "J.EDGAR.DUARTE.C@GMAIL.COM",
         "phone": "3138259982",
         "location": null,
+        "website": null,
+        "photoUrl": null
+      },
+      "summary": [],
+      "experience": [],
+      "otherExperience": [],
+      "education": [],
+      "skills": [],
+      "languages": [],
+      "certifications": [],
+      "additionalInfo": []
+    },
+    {
+      "id": "person-68c9a7ee",
+      "createdAt": "2026-11-24T22:01:16.821Z",
+      "updatedAt": "2026-11-24T22:01:16.821Z",
+      "profile": {
+        "fullName": "JOSE HENRY DUARTE CACERES",
+        "headline": {
+          "en": "Civil Engineer",
+          "es": "Ingeniero Civil"
+        },
+        "email": "joshendu@hotmail.com",
+        "phone": "12345678",
+        "location": {
+          "en": "Cucuta",
+          "es": "Cucuta"
+        },
         "website": null,
         "photoUrl": null
       },
