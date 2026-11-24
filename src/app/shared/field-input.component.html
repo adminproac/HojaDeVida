@@ -1,0 +1,102 @@
+@let f = field();
+@switch (true) {
+  @case (f.type === 'list') {
+    <div class="form-group nested-list">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <label class="mb-0 font-weight-semibold">{{ f.label | loc }}
+          <span class="badge badge-primary ml-1">{{ array().length }}</span>
+        </label>
+        <button type="button" class="btn btn-sm btn-primary" (click)="addRow()">
+          <i class="bi bi-plus-lg"></i> {{ 'addRow' | t }}
+        </button>
+      </div>
+      @for (row of array().controls; track row; let i = $index; let first = $first; let last = $last) {
+        <div class="nested-row">
+          <div class="nested-index">{{ i + 1 }}</div>
+          <div class="flex-grow-1">
+            @for (cf of childFields(); track cf.key) {
+              <app-field-input [field]="cf" [control]="row.get(cf.key)!" [idPrefix]="inputId() + '-' + i" [compact]="true" />
+            }
+          </div>
+          <div class="nested-actions btn-group-vertical btn-group-sm">
+            <button type="button" class="btn btn-light" [disabled]="first" (click)="moveRow(i, -1)" [title]="'moveUp' | t"><i class="bi bi-arrow-up"></i></button>
+            <button type="button" class="btn btn-light" [disabled]="last" (click)="moveRow(i, 1)" [title]="'moveDown' | t"><i class="bi bi-arrow-down"></i></button>
+            <button type="button" class="btn btn-light text-danger" (click)="removeRow(i)" [title]="'remove' | t"><i class="bi bi-trash"></i></button>
+          </div>
+        </div>
+      } @empty {
+        <p class="text-gray-600 small mb-0">{{ 'noItems' | t }}</p>
+      }
+    </div>
+  }
+  @case (f.type === 'boolean') {
+    <div class="form-group">
+      <div class="custom-control custom-switch">
+        <input type="checkbox" class="custom-control-input" [id]="inputId()" [formControl]="ctrl(control())" />
+        <label class="custom-control-label" [for]="inputId()">{{ f.label | loc }}</label>
+      </div>
+    </div>
+  }
+  @case (f.localized) {
+    <div class="form-group" [class.mb-2]="compact()">
+      @if (!compact()) {
+        <div class="d-flex justify-content-between align-items-end">
+          <label [for]="inputId() + '-es'">{{ f.label | loc }} @if (f.required) {<span class="text-danger">*</span>}
+            @if (f.maxLength) {<small class="text-gray-600"> · max {{ f.maxLength }}</small>}
+          </label>
+          <div class="copy-links small">
+            <a href="" (click)="$event.preventDefault(); copy('es', 'en')">{{ 'copyEsToEn' | t }}</a>
+            <span class="text-gray-600 mx-1">|</span>
+            <a href="" (click)="$event.preventDefault(); copy('en', 'es')">{{ 'copyEnToEs' | t }}</a>
+          </div>
+        </div>
+      }
+      <div class="form-row">
+        @for (lang of ['es', 'en']; track lang) {
+          @let c = group(control()).get(lang);
+          <div class="col-md-6 mb-1">
+            <div class="input-group input-group-sm-compact">
+              <div class="input-group-prepend"><span class="input-group-text lang-tag">{{ lang.toUpperCase() }}</span></div>
+              @if (f.type === 'text') {
+                <textarea class="form-control" rows="3" [id]="inputId() + '-' + lang" [formControl]="ctrl(c)"
+                          [class.is-invalid]="errorText(c)" [attr.maxlength]="f.maxLength"
+                          [attr.aria-label]="(f.label | loc) + ' ' + lang"></textarea>
+              } @else {
+                <input class="form-control" [id]="inputId() + '-' + lang" [formControl]="ctrl(c)"
+                       [class.is-invalid]="errorText(c)" [attr.maxlength]="f.maxLength"
+                       [attr.aria-label]="(f.label | loc) + ' ' + lang"
+                       [placeholder]="compact() ? (f.label | loc) : ''" />
+              }
+            </div>
+            <div class="d-flex justify-content-between">
+              <small class="text-danger">{{ errorText(c) }}</small>
+              @if (f.maxLength && !compact()) {<small class="text-gray-600">{{ length(c) }}/{{ f.maxLength }}</small>}
+            </div>
+          </div>
+        }
+      </div>
+      @if (f.help && !compact()) {<small class="form-text text-gray-600">{{ f.help | loc }}</small>}
+    </div>
+  }
+  @default {
+    @let c = control();
+    <div class="form-group">
+      <label [for]="inputId()">{{ f.label | loc }} @if (f.required) {<span class="text-danger">*</span>}
+        @if (f.maxLength) {<small class="text-gray-600"> · max {{ f.maxLength }}</small>}
+        @if (f.format) {<small class="text-gray-600"> · {{ f.format }}</small>}
+      </label>
+      @if (f.type === 'text') {
+        <textarea class="form-control" rows="4" [id]="inputId()" [formControl]="ctrl(c)" [class.is-invalid]="errorText(c)" [attr.maxlength]="f.maxLength"></textarea>
+      } @else {
+        <input class="form-control" [type]="inputType()" [id]="inputId()" [formControl]="ctrl(c)"
+               [class.is-invalid]="errorText(c)" [attr.maxlength]="f.maxLength"
+               [attr.placeholder]="f.ui === 'month' ? 'YYYY-MM' : null" />
+      }
+      <div class="d-flex justify-content-between">
+        <small class="text-danger">{{ errorText(c) }}</small>
+        @if (f.maxLength && f.ui !== 'month') {<small class="text-gray-600">{{ length(c) }}/{{ f.maxLength }}</small>}
+      </div>
+      @if (f.help) {<small class="form-text text-gray-600">{{ f.help | loc }}</small>}
+    </div>
+  }
+}

@@ -1,0 +1,117 @@
+<!-- Layout: SB Admin 2 (Start Bootstrap, MIT). Sidebar toggle/collapse reimplemented in Angular (no jQuery). -->
+<div id="wrapper">
+  <!-- Sidebar -->
+  <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar" [class.toggled]="toggled()">
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" routerLink="/dashboard">
+      <div class="sidebar-brand-icon rotate-n-15"><i class="fas fa-id-card"></i></div>
+      <div class="sidebar-brand-text mx-3">Resume <sup>Admin</sup></div>
+    </a>
+    <hr class="sidebar-divider my-0" />
+
+    <li class="nav-item" routerLinkActive="active">
+      <a class="nav-link" routerLink="/dashboard"><i class="fas fa-fw fa-tachometer-alt"></i><span>{{ 'dashboard' | t }}</span></a>
+    </li>
+
+    <hr class="sidebar-divider" />
+    <div class="sidebar-heading">{{ 'management' | t }}</div>
+
+    <li class="nav-item" [class.active]="isPeopleRoute()">
+      <a class="nav-link" href="" data-toggle="collapse" [class.collapsed]="openMenu() !== 'people'"
+         [attr.aria-expanded]="openMenu() === 'people'" (click)="$event.preventDefault(); toggleMenu('people')">
+        <i class="fas fa-fw fa-users"></i><span>{{ 'people' | t }}</span>
+      </a>
+      <div class="collapse" [class.show]="openMenu() === 'people'">
+        <div class="bg-white py-2 collapse-inner rounded">
+          <h6 class="collapse-header">{{ 'people' | t }} ({{ store.people().length }})</h6>
+          <a class="collapse-item" routerLink="/people" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"><i class="fas fa-fw fa-list mr-1"></i>{{ 'people' | t }}</a>
+          <a class="collapse-item" routerLink="/people/new" routerLinkActive="active"><i class="fas fa-fw fa-user-plus mr-1"></i>{{ 'newPerson' | t }}</a>
+          @if (store.people().length) {
+            <h6 class="collapse-header mt-2">{{ 'resume' | t }}</h6>
+            @for (p of store.people(); track p.id) {
+              <a class="collapse-item text-truncate" [routerLink]="['/people', p.id]" routerLinkActive="active" [title]="p.profile.fullName">{{ p.profile.fullName }}</a>
+            }
+          }
+        </div>
+      </div>
+    </li>
+
+    <hr class="sidebar-divider" />
+    <div class="sidebar-heading">{{ 'tools' | t }}</div>
+
+    <li class="nav-item" routerLinkActive="active">
+      <a class="nav-link" routerLink="/schema"><i class="fas fa-fw fa-sitemap"></i><span>{{ 'schema' | t }}</span></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="" (click)="$event.preventDefault(); backup()"><i class="fas fa-fw fa-download"></i><span>{{ 'backup' | t }}</span></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="" (click)="$event.preventDefault(); reload()"><i class="fas fa-fw fa-sync-alt"></i><span>{{ 'reload' | t }}</span></a>
+    </li>
+
+    <hr class="sidebar-divider d-none d-md-block" />
+    <div class="text-center d-none d-md-inline">
+      <button class="rounded-circle border-0" id="sidebarToggle" type="button" aria-label="Toggle sidebar" (click)="toggleSidebar()"></button>
+    </div>
+  </ul>
+  <!-- End of Sidebar -->
+
+  <div id="content-wrapper" class="d-flex flex-column">
+    <div id="content">
+      <!-- Topbar -->
+      <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+        <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3" type="button" aria-label="Menu" (click)="toggleSidebar()">
+          <i class="fa fa-bars"></i>
+        </button>
+        <span class="d-none d-lg-inline text-gray-600 small">{{ 'welcome' | t }}</span>
+
+        <ul class="navbar-nav ml-auto align-items-center">
+          <li class="nav-item mx-1">
+            <span class="small text-gray-600 mr-2 d-none d-sm-inline"><i class="fas fa-language"></i> {{ 'language' | t }}</span>
+            <div class="btn-group btn-group-sm lang-toggle" role="group" aria-label="Language">
+              <button type="button" class="btn" [class.btn-primary]="i18n.lang() === 'es'" [class.btn-light]="i18n.lang() !== 'es'" (click)="setLang('es')">ES</button>
+              <button type="button" class="btn" [class.btn-primary]="i18n.lang() === 'en'" [class.btn-light]="i18n.lang() !== 'en'" (click)="setLang('en')">EN</button>
+            </div>
+          </li>
+          <div class="topbar-divider d-none d-sm-block"></div>
+          <li class="nav-item">
+            <span class="nav-link">
+              <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ 'appName' | t }}</span>
+              <span class="img-profile rounded-circle topbar-avatar"><i class="fas fa-user"></i></span>
+            </span>
+          </li>
+        </ul>
+      </nav>
+      <!-- End of Topbar -->
+
+      <div class="container-fluid">
+        @if (store.apiError()) {
+          <div class="alert alert-danger d-flex align-items-center justify-content-between">
+            <span><i class="fas fa-plug mr-2"></i>{{ 'apiDown' | t }}</span>
+            <button class="btn btn-sm btn-light" (click)="store.load()">{{ 'retry' | t }}</button>
+          </div>
+        }
+        @if (store.loading() && !store.doc()) {
+          <div class="text-center text-gray-600 py-5"><div class="spinner-border text-primary"></div><div class="mt-2">{{ 'loading' | t }}</div></div>
+        } @else {
+          <router-outlet />
+        }
+      </div>
+    </div>
+
+    <footer class="sticky-footer bg-white">
+      <div class="container my-auto">
+        <div class="copyright text-center my-auto">
+          <span>Resume Admin © 2026 · {{ 'dataFile' | t }}: <code>Data/resume-data.json</code> · Theme: SB Admin 2 by Start Bootstrap (MIT)</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<!-- Scroll to Top Button -->
+@if (showScrollTop()) {
+  <a class="scroll-to-top rounded d-block" href="" (click)="$event.preventDefault(); scrollTop()" aria-label="Top"><i class="fas fa-angle-up"></i></a>
+}
+
+<app-confirm-dialog />
+<app-toasts />

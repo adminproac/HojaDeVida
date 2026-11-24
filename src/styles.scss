@@ -1,0 +1,87 @@
+/* ==========================================================================
+   Theme: SB Admin 2 v4.1.4 by Start Bootstrap — MIT License
+   (src/vendor/sb-admin-2/sb-admin-2.min.css + LICENSE, loaded in angular.json;
+   it already bundles Bootstrap 4.6). Below: only app-specific additions that
+   reuse SB Admin 2's palette. No jQuery: sidebar toggle/collapse are in app.ts.
+   ========================================================================== */
+$primary: #4e73df;
+$success: #1cc88a;
+$info: #36b9cc;
+$warning: #f6c23e;
+$danger: #e74a3b;
+$gray-600: #858796;
+$gray-800: #5a5c69;
+
+body { font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+
+/* Page heading breadcrumb */
+.sb-breadcrumb { background: transparent; padding: 0; margin: 0; font-size: 0.8rem; }
+.page-actions .btn { margin-left: 0.25rem; }
+
+/* Clickable stat cards keep SB look */
+a.stat-link { text-decoration: none; transition: transform 0.15s; }
+a.stat-link:hover { transform: translateY(-2px); }
+
+/* Sidebar: long names inside the collapse menu */
+.sidebar .collapse-inner .collapse-item { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar-avatar { display: inline-flex; width: 2rem; height: 2rem; align-items: center; justify-content: center; background: #eaecf4; color: $primary; }
+.lang-toggle .btn { min-width: 42px; font-weight: 700; }
+
+/* Tables */
+.table thead th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; color: $gray-800; }
+.avatar-sm {
+  width: 36px; height: 36px; border-radius: 50%; background: rgba($primary, 0.12); color: $primary; font-weight: 800;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0;
+}
+.search-box {
+  position: relative; min-width: 260px;
+  i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: $gray-600; }
+  .form-control { padding-left: 34px; background: #f8f9fc; border: 0; }
+}
+.btn-xs { padding: 0.15rem 0.4rem; font-size: 0.75rem; line-height: 1.4; border-radius: 0.2rem; }
+
+/* Forms */
+label { font-weight: 700; color: $gray-800; font-size: 0.83rem; }
+.lang-tag { font-size: 0.7rem; font-weight: 800; color: $primary; min-width: 40px; justify-content: center; }
+.input-group > textarea.form-control { min-height: 70px; }
+.copy-links a { font-size: 0.75rem; }
+.nested-list { background: #f8f9fc; border: 1px dashed #d1d3e2; border-radius: 0.35rem; padding: 14px; }
+.nested-row { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #e3e6f0; &:last-child { border-bottom: none; } }
+.nested-index { width: 26px; height: 26px; border-radius: 50%; background: $primary; color: #fff; font-weight: 800; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; margin-top: 4px; flex-shrink: 0; }
+
+/* Résumé view */
+.section-icon { display: inline-flex; width: 28px; height: 28px; border-radius: 50%; align-items: center; justify-content: center; background: $primary; color: #fff; margin-right: 8px; font-size: 0.85rem; }
+.profile-card { overflow: hidden; }
+.profile-cover { height: 90px; background-color: $primary; background-image: linear-gradient(180deg, #4e73df 10%, #224abe 100%); }
+.profile-avatar {
+  width: 96px; height: 96px; border-radius: 50%; margin-top: -70px; border: 4px solid #fff; object-fit: cover;
+  background: #fff; color: $primary; font-size: 2rem; font-weight: 800;
+  display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+.contact-list .list-group-item { display: flex; align-items: center; word-break: break-all; i { color: $primary; margin-right: 10px; } }
+.section-nav a { display: flex; align-items: center; color: $gray-600; padding: 5px 0; i { color: $primary; width: 24px; } &:hover { color: $primary; text-decoration: none; } }
+.resume-item {
+  position: relative; padding: 14px 0; border-bottom: 1px solid #e3e6f0;
+  &:first-child { padding-top: 0; }
+  &:last-child { border-bottom: none; padding-bottom: 0; }
+  .item-actions { position: absolute; top: 10px; right: 0; opacity: 0.45; transition: opacity 0.15s; display: flex; gap: 3px; }
+  &:first-child .item-actions { top: -4px; }
+  &:hover .item-actions { opacity: 1; }
+  > :not(.item-actions) { padding-right: 130px; }
+  @media (max-width: 575.98px) { > :not(.item-actions) { padding-right: 0; } .item-actions { position: static; opacity: 1; justify-content: flex-end; margin-bottom: 6px; } }
+}
+.item-text { line-height: 1.6; }
+.highlights { padding-left: 18px; li { margin-bottom: 4px; } }
+.date-badge { font-size: 0.75rem; padding: 0.4em 0.7em; }
+.badge-skill { background: #eaecf4; color: $primary; font-weight: 700; padding: 0.45em 0.8em; margin: 0 6px 6px 0; font-size: 0.8rem; border-radius: 10rem; }
+.activity-list li { padding: 8px 0 8px 16px; border-left: 2px solid rgba($primary, 0.25); position: relative;
+  &::before { content: ''; position: absolute; left: -6px; top: 14px; width: 10px; height: 10px; border-radius: 50%; background: $primary; } }
+
+/* Toasts & modal */
+.toast-stack { position: fixed; top: 82px; right: 20px; z-index: 1060; width: 340px; max-width: calc(100vw - 40px); }
+.modal-backdrop.show { opacity: 0.5; }
+
+@media print {
+  .sidebar, .topbar, .sticky-footer, .item-actions, .section-nav, .btn, .toast-stack, .scroll-to-top, .sb-breadcrumb { display: none !important; }
+  .card { box-shadow: none !important; }
+}

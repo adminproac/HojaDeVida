@@ -1,0 +1,49 @@
+{
+  // Tareas: Terminal > Ejecutar tarea… / Terminal > Run Task…
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "npm: serve (API + Angular)",
+      "type": "npm",
+      "script": "serve",
+      "isBackground": true,
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": { "regexp": "(Changes detected|Building|wait-on)" },
+          "endsPattern": { "regexp": "(bundle generation (complete|failed)|Local:)" }
+        }
+      }
+    },
+    {
+      "label": "npm: web (Angular dev server)",
+      "type": "npm",
+      "script": "web",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": { "regexp": "(Changes detected|Building|wait-on)" },
+          "endsPattern": { "regexp": "(bundle generation (complete|failed)|Local:)" }
+        }
+      }
+    },
+    {
+      "label": "npm: api (Node/Express)",
+      "type": "npm",
+      "script": "api",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": { "regexp": "^__never__$" },
+        "background": { "activeOnStart": true, "beginsPattern": "\\[api\\]", "endsPattern": "\\[api\\] http" }
+      }
+    },
+    { "label": "npm: build", "type": "npm", "script": "build", "group": "build", "problemMatcher": ["$tsc"] },
+    { "label": "npm: backup (copia del JSON)", "type": "npm", "script": "backup", "problemMatcher": [] }
+  ]
+}

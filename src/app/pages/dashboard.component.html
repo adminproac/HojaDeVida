@@ -1,0 +1,79 @@
+<app-page-header [title]="'dashboard' | t" [crumbs]="[{ label: 'home' | t, link: '/dashboard' }, { label: 'dashboard' | t }]">
+  <a routerLink="/people/new" class="btn btn-primary"><i class="bi bi-person-plus mr-1"></i>{{ 'newPerson' | t }}</a>
+</app-page-header>
+
+<div class="row">
+  @for (s of stats(); track s.key) {
+    <div class="col-xl-3 col-md-6 mb-4">
+      <a class="card border-left-{{ s.color }} shadow h-100 py-2 stat-link" [routerLink]="s.link">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-{{ s.color }} text-uppercase mb-1">{{ s.key | t }}</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ s.value }}</div>
+            </div>
+            <div class="col-auto"><i class="fas {{ s.icon }} fa-2x text-gray-300"></i></div>
+          </div>
+        </div>
+      </a>
+    </div>
+  }
+</div>
+
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">{{ 'people' | t }}</h6>
+        <a routerLink="/people" class="btn btn-sm btn-primary">{{ 'people' | t }} <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover mb-0">
+            <thead><tr>
+              <th>{{ 'name' | t }}</th><th class="text-center">{{ 'jobs' | t }}</th><th class="text-center">{{ 'skills' | t }}</th>
+              <th class="text-center">{{ 'studies' | t }}</th><th class="text-center">{{ 'languages' | t }}</th><th></th>
+            </tr></thead>
+            <tbody>
+              @for (p of store.people(); track p.id) {
+                <tr>
+                  <td><a [routerLink]="['/people', p.id]" class="font-weight-semibold">{{ p.profile.fullName }}</a>
+                    <div class="small text-gray-600">{{ p.profile.headline | loc }}</div></td>
+                  <td class="text-center"><span class="badge badge-success">{{ jobs(p) }}</span></td>
+                  <td class="text-center"><span class="badge badge-warning">{{ skillCount(p) }}</span></td>
+                  <td class="text-center"><span class="badge badge-danger">{{ countOf(p, 'education') }}</span></td>
+                  <td class="text-center"><span class="badge badge-info">{{ countOf(p, 'languages') }}</span></td>
+                  <td class="text-right"><a [routerLink]="['/people', p.id]" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">{{ 'skillsByCategory' | t }}</h6></div>
+      <div class="card-body">
+        @for (b of skillBars(); track $index) {
+          <div class="mb-3">
+            <div class="d-flex justify-content-between small mb-1"><span>{{ b.label | loc }}</span><span class="font-weight-semibold">{{ b.value }}</span></div>
+            <div class="progress" style="height: 8px"><div class="progress-bar bg-{{ b.color }}" [style.width.%]="b.pct"></div></div>
+          </div>
+        } @empty { <p class="text-gray-600 mb-0">{{ 'noItems' | t }}</p> }
+      </div>
+    </div>
+    <div class="card shadow mb-4">
+      <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">{{ 'recentActivity' | t }}</h6></div>
+      <div class="card-body">
+        <ul class="list-unstyled activity-list mb-0">
+          @for (p of recent(); track p.id) {
+            <li><a [routerLink]="['/people', p.id]">{{ p.profile.fullName }}</a>
+              <div class="small text-gray-600">{{ 'updated' | t }}: {{ i18n.dateTime(p.updatedAt) }}</div></li>
+          }
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

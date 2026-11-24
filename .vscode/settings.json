@@ -1,0 +1,7 @@
+{
+  "files.eol": "\n",
+  "editor.formatOnSave": false,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "files.exclude": { "**/.angular": true },
+  "search.exclude": { "**/dist": true, "**/.angular": true, "Data/backups": true }
+}

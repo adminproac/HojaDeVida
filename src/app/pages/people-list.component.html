@@ -1,0 +1,45 @@
+<app-page-header [title]="'people' | t" [crumbs]="[{ label: 'home' | t, link: '/dashboard' }, { label: 'people' | t }]">
+  <a routerLink="/people/new" class="btn btn-primary"><i class="bi bi-person-plus mr-1"></i>{{ 'newPerson' | t }}</a>
+</app-page-header>
+
+<div class="card shadow mb-4">
+  <div class="card-header py-3 d-flex flex-wrap justify-content-between align-items-center">
+    <h6 class="m-0 font-weight-bold text-primary">{{ 'people' | t }} <span class="badge badge-primary">{{ filtered().length }}</span></h6>
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+      <input type="search" class="form-control" [placeholder]="'searchPeople' | t" [value]="query()" (input)="query.set($any($event.target).value)" />
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover mb-0">
+        <thead class="thead-light"><tr>
+          <th>{{ 'name' | t }}</th><th>{{ 'email' | t }}</th><th>{{ 'phone' | t }}</th><th>{{ 'updated' | t }}</th><th class="text-right">{{ 'actions' | t }}</th>
+        </tr></thead>
+        <tbody>
+          @for (p of filtered(); track p.id) {
+            <tr>
+              <td>
+                <div class="d-flex align-items-center">
+                  <span class="avatar-sm mr-2">{{ initials(p.profile.fullName) }}</span>
+                  <div><a [routerLink]="['/people', p.id]" class="font-weight-semibold">{{ p.profile.fullName }}</a>
+                    <div class="small text-gray-600">{{ p.profile.headline | loc }}</div></div>
+                </div>
+              </td>
+              <td>{{ p.profile.email }}</td>
+              <td>{{ p.profile.phone }}</td>
+              <td class="small text-gray-600">{{ i18n.dateTime(p.updatedAt) }}</td>
+              <td class="text-right text-nowrap">
+                <a [routerLink]="['/people', p.id]" class="btn btn-sm btn-primary" [title]="'viewResume' | t"><i class="bi bi-eye"></i></a>
+                <a [routerLink]="['/people', p.id, 'edit']" class="btn btn-sm btn-success ml-1" [title]="'editProfile' | t"><i class="bi bi-pencil"></i></a>
+                <button class="btn btn-sm btn-danger ml-1" (click)="remove(p)" [title]="'delete' | t"><i class="bi bi-trash"></i></button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="text-center text-gray-600 py-4">{{ 'noPeople' | t }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

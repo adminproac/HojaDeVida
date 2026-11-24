@@ -1,0 +1,9 @@
+{
+  // Extensiones recomendadas / Recommended extensions
+  "recommendations": [
+    "angular.ng-template",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "editorconfig.editorconfig"
+  ]
+}

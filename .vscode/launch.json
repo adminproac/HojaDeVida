@@ -1,0 +1,46 @@
+{
+  // Ejecutar y depurar (F5) / Run and Debug (F5)
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "1. Todo: API + Angular (Edge)",
+      "type": "msedge",
+      "request": "launch",
+      "preLaunchTask": "npm: serve (API + Angular)",
+      "url": "http://localhost:4200/",
+      "webRoot": "${workspaceFolder}"
+    },
+    {
+      "name": "2. Todo: API + Angular (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "preLaunchTask": "npm: serve (API + Angular)",
+      "url": "http://localhost:4200/",
+      "webRoot": "${workspaceFolder}"
+    },
+    {
+      "name": "3. Depurar API (Node)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/server/index.js",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "4. Depurar Angular (Chrome; API ya iniciada)",
+      "type": "chrome",
+      "request": "launch",
+      "preLaunchTask": "npm: web (Angular dev server)",
+      "url": "http://localhost:4200/",
+      "webRoot": "${workspaceFolder}"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "5. Depurar API + Angular (Node + Chrome)",
+      "configurations": ["3. Depurar API (Node)", "4. Depurar Angular (Chrome; API ya iniciada)"],
+      "stopAll": true
+    }
+  ]
+}
