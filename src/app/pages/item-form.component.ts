@@ -1,7 +1,8 @@
 import { Component, OnInit, inject, input, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { ApiService } from '../core/api.service';
+import { DataService } from '../core/data.service';
+import { apiFieldErrors, errorText } from '../core/data-error';
 import { I18nService } from '../core/i18n.service';
 import { StoreService } from '../core/store.service';
 import { ToastService } from '../core/toast.service';
@@ -30,12 +31,13 @@ import { applyServerErrors } from './server-errors';
             </div>
           </div>
           <div class="card-body">
+            @if (store.readOnly()) { <div class="alert alert-warning">{{ 'githubReadOnly' | t }}</div> }
             <app-dynamic-form [schemaFields]="s.fields" [form]="form()!" />
-            @if (formError()) { <div class="alert alert-danger">{{ formError() }}</div> }
+            @if (formError()) { <div class="alert alert-danger" role="alert">{{ formError() }}</div> }
           </div>
           <div class="card-footer text-right">
             <a class="btn btn-light mr-2" [routerLink]="['/people', person()!.id]" [fragment]="s.key">{{ 'cancel' | t }}</a>
-            <button type="submit" class="btn btn-primary" [disabled]="saving()"><i class="bi bi-save mr-1"></i>{{ (saving() ? 'saving' : 'save') | t }}</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving() || store.readOnly()"><i class="bi bi-save mr-1"></i>{{ (saving() ? 'saving' : 'save') | t }}</button>
           </div>
         </div>
       </form>
@@ -49,8 +51,8 @@ export class ItemFormComponent implements OnInit {
   readonly section$ = input.required<string>({ alias: 'section' });
   readonly itemId = input<string>();
 
-  private store = inject(StoreService);
-  private api = inject(ApiService);
+  protected store = inject(StoreService);
+  private data = inject(DataService);
   private i18n = inject(I18nService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -84,17 +86,21 @@ export class ItemFormComponent implements OnInit {
     this.formError.set(null);
     touchAll(f);
     if (f.invalid) { this.formError.set(this.i18n.t('formInvalid')); return; }
+    if (this.store.readOnly()) { this.formError.set(this.i18n.t('githubReadOnly')); return; }
     this.saving.set(true);
     try {
       const body = { ...f.getRawValue(), order: this.order.value ? Number(this.order.value) : undefined };
-      if (this.isNew()) await this.api.createItem(this.id(), s.key, body);
-      else await this.api.updateItem(this.id(), s.key, this.itemId()!, body);
+      if (this.isNew()) await this.data.createItem(this.id(), s.key, body);
+      else await this.data.updateItem(this.id(), s.key, this.itemId()!, body);
       await this.store.load();
-      this.toast.show(this.i18n.t(this.isNew() ? 'created' : 'saved'));
+      const key = this.store.mode() === 'github' ? (this.isNew() ? 'createdGithub' : 'savedGithub') : (this.isNew() ? 'created' : 'saved');
+      this.toast.show(this.i18n.t(key));
       this.router.navigate(['/people', this.id()], { fragment: s.key });
-    } catch (e: any) {
-      const rest = applyServerErrors(f, e?.error?.errors, s.key);
-      this.formError.set(`${this.i18n.t('serverError')} ${rest.join(' ') || e?.error?.message || e?.message}`);
+    } catch (e) {
+      const rest = applyServerErrors(f, apiFieldErrors(e), s.key);
+      const text = `${this.i18n.t('serverError')} ${rest.join(' ') || errorText(e)}`;
+      this.formError.set(text);
+      if (this.store.mode() === 'github') this.store.actionError.set(text);
     } finally {
       this.saving.set(false);
     }

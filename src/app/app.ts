@@ -3,23 +3,27 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { filter } from 'rxjs';
 import { I18nService } from './core/i18n.service';
 import { StoreService } from './core/store.service';
-import { ApiService } from './core/api.service';
+import { DataService } from './core/data.service';
+import { errorText } from './core/data-error';
+import { GithubService } from './core/github.service';
 import { ToastService } from './core/toast.service';
 import { ConfirmDialogComponent } from './shared/confirm-dialog.component';
+import { GithubConnectComponent } from './shared/github-connect.component';
 import { ToastsComponent } from './shared/toasts.component';
 import { TPipe } from './shared/pipes';
 import { Lang } from './core/models';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, ConfirmDialogComponent, ToastsComponent, TPipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ConfirmDialogComponent, GithubConnectComponent, ToastsComponent, TPipe],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App {
   protected i18n = inject(I18nService);
   protected store = inject(StoreService);
-  private api = inject(ApiService);
+  protected github = inject(GithubService);
+  private data = inject(DataService);
   private toast = inject(ToastService);
   private router = inject(Router);
 
@@ -76,10 +80,17 @@ export class App {
 
   async backup() {
     try {
-      const res = await this.api.backup();
+      const res = await this.data.backup();
       this.toast.show(`${this.i18n.t('backupDone')} ${res.file}`, 'success', 6000);
-    } catch {
-      this.toast.show(this.i18n.t('apiDown'), 'danger');
+    } catch (e) {
+      this.fail(e, this.i18n.t('apiDown'));
     }
+  }
+
+  /** GitHub failures stay on screen with the HTTP status and the GitHub message. */
+  fail(e: unknown, fallback: string) {
+    const text = this.store.mode() === 'github' ? `${this.i18n.t('serverError')} ${errorText(e)}` : fallback;
+    if (this.store.mode() === 'github') this.store.actionError.set(text);
+    else this.toast.show(text, 'danger');
   }
 }

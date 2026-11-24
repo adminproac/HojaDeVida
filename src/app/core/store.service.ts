@@ -1,15 +1,23 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { ApiService } from './api.service';
+import { DataService } from './data.service';
+import { errorText } from './data-error';
+import { GithubService } from './github.service';
 import { Person, ResumeDocument, SectionSchema } from './models';
 
-/** In-memory copy of the JSON document; every change goes through the API and then reloads. */
+/** In-memory copy of the JSON document. Saves go to the local API or to a GitHub commit. */
 @Injectable({ providedIn: 'root' })
 export class StoreService {
-  private api = inject(ApiService);
+  private data = inject(DataService);
+  private github = inject(GithubService);
 
   readonly doc = signal<ResumeDocument | null>(null);
   readonly loading = signal(false);
   readonly apiError = signal(false);
+  readonly loadError = signal<string | null>(null);
+  /** Mutation errors stay here until dismissed or the next successful reload. */
+  readonly actionError = signal<string | null>(null);
+  readonly mode = this.data.mode;
+  readonly readOnly = computed(() => this.mode() === 'github' && !this.github.hasToken());
 
   readonly schema = computed(() => this.doc()?.schema ?? null);
   readonly people = computed<Person[]>(() => this.doc()?.people ?? []);
@@ -22,10 +30,14 @@ export class StoreService {
   async load() {
     this.loading.set(true);
     try {
-      this.doc.set(await this.api.getData());
+      await this.data.ensureMode();
+      this.doc.set(await this.data.getData());
       this.apiError.set(false);
-    } catch {
+      this.loadError.set(null);
+      this.actionError.set(null);
+    } catch (e) {
       this.apiError.set(true);
+      this.loadError.set(errorText(e));
     } finally {
       this.loading.set(false);
     }

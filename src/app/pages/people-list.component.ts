@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ApiService } from '../core/api.service';
+import { DataService } from '../core/data.service';
+import { errorText } from '../core/data-error';
 import { ConfirmService } from '../core/confirm.service';
 import { I18nService } from '../core/i18n.service';
 import { StoreService } from '../core/store.service';
@@ -17,7 +18,7 @@ import { LocPipe, TPipe } from '../shared/pipes';
 export class PeopleListComponent {
   protected i18n = inject(I18nService);
   protected store = inject(StoreService);
-  private api = inject(ApiService);
+  private data = inject(DataService);
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
 
@@ -29,6 +30,12 @@ export class PeopleListComponent {
     return people.filter((p) => JSON.stringify(p.profile).toLowerCase().includes(q));
   });
 
+  private showError(e: unknown) {
+    const text = `${this.i18n.t('serverError')} ${errorText(e)}`;
+    if (this.store.mode() === 'github') this.store.actionError.set(text);
+    else this.toast.show(text, 'danger');
+  }
+
   initials(name: string) {
     return name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   }
@@ -38,11 +45,11 @@ export class PeopleListComponent {
       this.i18n.t('yesDelete'), this.i18n.t('cancel'));
     if (!ok) return;
     try {
-      await this.api.deletePerson(p.id);
+      await this.data.deletePerson(p.id);
       await this.store.load();
       this.toast.show(this.i18n.t('deleted'));
-    } catch (e: any) {
-      this.toast.show(`${this.i18n.t('serverError')} ${e?.error?.message ?? e?.message}`, 'danger');
+    } catch (e) {
+      this.showError(e);
     }
   }
 }

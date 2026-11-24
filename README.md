@@ -22,7 +22,30 @@ npm install
 npm start
 ```
 
-GitHub Pages no puede alojar la función de guardar: esa función necesita la API de Node (`server/`), y GitHub Pages solo sirve archivos estáticos.
+La versión publicada está en https://adminproac.github.io/HojaDeVida/. Para guardar desde esa página hace falta un token; los pasos están en la sección siguiente.
+
+---
+
+## Sitio en vivo y token de GitHub
+
+La aplicación publicada está en **https://adminproac.github.io/HojaDeVida/**.
+
+En el repositorio, **Settings → Pages → Build and deployment → Source** debe ser **GitHub Actions**. Cada push a `main` compila Angular con `--base-href /HojaDeVida/` y publica el sitio.
+
+El sitio elige el modo solo:
+
+- Si la API local responde (por ejemplo con `npm start` en su equipo o en Codespaces), cada cambio se guarda como hasta ahora: la API de Node escribe `Data/resume-data.json`.
+- Si no hay API (GitHub Pages), la página entra en **modo GitHub**. Lee `Data/resume-data.json` del repositorio. Sin token es **solo lectura**. Con token, cada alta, edición o eliminación hace un commit de ese JSON en `main`.
+
+Ese commit vuelve a publicar el sitio. No hace falta esperar la publicación: la página muestra los datos nuevos en cuanto el commit termina.
+
+### Crear el token (granularidad fina)
+
+1. En GitHub abra **Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**.
+2. Resource owner: su usuario. Repository access: **Only select repositories** y elija solo `adminproac/HojaDeVida`.
+3. Permissions → Repository permissions → **Contents: Read and write**. No hace falta ningún otro permiso.
+4. Genere el token. Ábralo en https://adminproac.github.io/HojaDeVida/, péguelo en **Conectar con GitHub**, pulse **Guardar token** y luego **Probar conexión**.
+5. El token **solo se guarda en ese navegador** (`localStorage`). No se escribe en el repositorio, ni en el JSON, ni en el código. En otro navegador o equipo hay que pegarlo otra vez. **Desconectar** lo borra de este navegador.
 
 ---
 
@@ -195,6 +218,8 @@ cd C:\Personal\Boss\Resume
 npm install
 npm start          # API on :3000 + Angular on :4200 (opens the browser)
 ```
+
+Live site: https://adminproac.github.io/HojaDeVida/. On GitHub Pages the page is read-only until you paste a fine-grained token (this repo only, Contents: Read and write) in **Connect to GitHub**. The token stays in that browser's localStorage and is never committed. See the Spanish section above for the exact steps. Saving there commits `Data/resume-data.json` to `main` and the page shows the new data immediately.
 Other scripts: `npm run dev` (API auto-restart), `npm run serve` (no browser), `npm run build`, `npm run start:prod` (serve the built app from the API on :3000), `npm run backup`.
 
 ### VS Code

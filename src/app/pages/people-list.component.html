@@ -1,5 +1,7 @@
 <app-page-header [title]="'people' | t" [crumbs]="[{ label: 'home' | t, link: '/dashboard' }, { label: 'people' | t }]">
-  <a routerLink="/people/new" class="btn btn-primary"><i class="bi bi-person-plus mr-1"></i>{{ 'newPerson' | t }}</a>
+  @if (!store.readOnly()) {
+    <a routerLink="/people/new" class="btn btn-primary"><i class="bi bi-person-plus mr-1"></i>{{ 'newPerson' | t }}</a>
+  }
 </app-page-header>
 
 <div class="card shadow mb-4">
@@ -31,8 +33,10 @@
               <td class="small text-gray-600">{{ i18n.dateTime(p.updatedAt) }}</td>
               <td class="text-right text-nowrap">
                 <a [routerLink]="['/people', p.id]" class="btn btn-sm btn-primary" [title]="'viewResume' | t"><i class="bi bi-eye"></i></a>
-                <a [routerLink]="['/people', p.id, 'edit']" class="btn btn-sm btn-success ml-1" [title]="'editProfile' | t"><i class="bi bi-pencil"></i></a>
-                <button class="btn btn-sm btn-danger ml-1" (click)="remove(p)" [title]="'delete' | t"><i class="bi bi-trash"></i></button>
+                @if (!store.readOnly()) {
+                  <a [routerLink]="['/people', p.id, 'edit']" class="btn btn-sm btn-success ml-1" [title]="'editProfile' | t"><i class="bi bi-pencil"></i></a>
+                  <button type="button" class="btn btn-sm btn-danger ml-1" (click)="remove(p)" [title]="'delete' | t"><i class="bi bi-trash"></i></button>
+                }
               </td>
             </tr>
           } @empty {

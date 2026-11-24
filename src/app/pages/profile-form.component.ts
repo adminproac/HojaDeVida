@@ -1,7 +1,8 @@
 import { Component, OnInit, inject, input, signal } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { ApiService } from '../core/api.service';
+import { DataService } from '../core/data.service';
+import { apiFieldErrors, errorText } from '../core/data-error';
 import { I18nService } from '../core/i18n.service';
 import { StoreService } from '../core/store.service';
 import { ToastService } from '../core/toast.service';
@@ -24,12 +25,13 @@ import { applyServerErrors } from './server-errors';
         <div class="card shadow mb-4">
           <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary"><i class="bi bi-person-badge mr-2 text-primary"></i>{{ store.schema()?.profile?.label | loc }}</h6></div>
           <div class="card-body">
+            @if (store.readOnly()) { <div class="alert alert-warning">{{ 'githubReadOnly' | t }}</div> }
             <app-dynamic-form [schemaFields]="fields()" [form]="f" />
-            @if (formError()) { <div class="alert alert-danger">{{ formError() }}</div> }
+            @if (formError()) { <div class="alert alert-danger" role="alert">{{ formError() }}</div> }
           </div>
           <div class="card-footer text-right">
             <a class="btn btn-light mr-2" [routerLink]="person() ? ['/people', person()!.id] : ['/people']">{{ 'cancel' | t }}</a>
-            <button type="submit" class="btn btn-primary" [disabled]="saving()"><i class="bi bi-save mr-1"></i>{{ (saving() ? 'saving' : 'save') | t }}</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving() || store.readOnly()"><i class="bi bi-save mr-1"></i>{{ (saving() ? 'saving' : 'save') | t }}</button>
           </div>
         </div>
       </form>
@@ -41,7 +43,7 @@ import { applyServerErrors } from './server-errors';
 export class ProfileFormComponent implements OnInit {
   readonly id = input<string>();
   protected store = inject(StoreService);
-  private api = inject(ApiService);
+  private data = inject(DataService);
   private i18n = inject(I18nService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -69,16 +71,20 @@ export class ProfileFormComponent implements OnInit {
     this.formError.set(null);
     touchAll(f);
     if (f.invalid) { this.formError.set(this.i18n.t('formInvalid')); return; }
+    if (this.store.readOnly()) { this.formError.set(this.i18n.t('githubReadOnly')); return; }
     this.saving.set(true);
     try {
       const value = f.getRawValue();
-      const saved = this.isNew() ? await this.api.createPerson(value) : await this.api.updateProfile(this.id()!, value);
+      const saved = this.isNew() ? await this.data.createPerson(value) : await this.data.updateProfile(this.id()!, value);
       await this.store.load();
-      this.toast.show(this.i18n.t(this.isNew() ? 'created' : 'saved'));
+      const key = this.store.mode() === 'github' ? (this.isNew() ? 'createdGithub' : 'savedGithub') : (this.isNew() ? 'created' : 'saved');
+      this.toast.show(this.i18n.t(key));
       this.router.navigate(['/people', saved.id]);
-    } catch (e: any) {
-      const rest = applyServerErrors(f, e?.error?.errors, 'profile');
-      this.formError.set(`${this.i18n.t('serverError')} ${rest.join(' ') || e?.error?.message || e?.message}`);
+    } catch (e) {
+      const rest = applyServerErrors(f, apiFieldErrors(e), 'profile');
+      const text = `${this.i18n.t('serverError')} ${rest.join(' ') || errorText(e)}`;
+      this.formError.set(text);
+      if (this.store.mode() === 'github') this.store.actionError.set(text);
     } finally {
       this.saving.set(false);
     }

@@ -1,7 +1,8 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { NgTemplateOutlet } from '@angular/common';
-import { ApiService } from '../core/api.service';
+import { DataService } from '../core/data.service';
+import { errorText } from '../core/data-error';
 import { ConfirmService } from '../core/confirm.service';
 import { I18nService } from '../core/i18n.service';
 import { StoreService } from '../core/store.service';
@@ -20,7 +21,7 @@ export class PersonViewComponent {
   readonly id = input.required<string>();
   protected i18n = inject(I18nService);
   protected store = inject(StoreService);
-  private api = inject(ApiService);
+  private data = inject(DataService);
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -57,10 +58,10 @@ export class PersonViewComponent {
 
   async move(s: SectionSchema, it: SectionItem, direction: 'up' | 'down') {
     try {
-      await this.api.moveItem(this.id(), s.key, it.id, direction);
+      await this.data.moveItem(this.id(), s.key, it.id, direction);
       await this.store.load();
-    } catch (e: any) {
-      this.toast.show(`${this.i18n.t('serverError')} ${e?.error?.message ?? e?.message}`, 'danger');
+    } catch (e) {
+      this.showError(e);
     }
   }
 
@@ -69,11 +70,11 @@ export class PersonViewComponent {
       this.i18n.t('yesDelete'), this.i18n.t('cancel'));
     if (!ok) return;
     try {
-      await this.api.deleteItem(this.id(), s.key, it.id);
+      await this.data.deleteItem(this.id(), s.key, it.id);
       await this.store.load();
       this.toast.show(this.i18n.t('deleted'));
-    } catch (e: any) {
-      this.toast.show(`${this.i18n.t('serverError')} ${e?.error?.message ?? e?.message}`, 'danger');
+    } catch (e) {
+      this.showError(e);
     }
   }
 
@@ -84,13 +85,19 @@ export class PersonViewComponent {
       this.i18n.t('yesDelete'), this.i18n.t('cancel'));
     if (!ok) return;
     try {
-      await this.api.deletePerson(p.id);
+      await this.data.deletePerson(p.id);
       await this.store.load();
       this.toast.show(this.i18n.t('deleted'));
       this.router.navigate(['/people']);
-    } catch (e: any) {
-      this.toast.show(`${this.i18n.t('serverError')} ${e?.error?.message ?? e?.message}`, 'danger');
+    } catch (e) {
+      this.showError(e);
     }
+  }
+
+  private showError(e: unknown) {
+    const text = `${this.i18n.t('serverError')} ${errorText(e)}`;
+    if (this.store.mode() === 'github') this.store.actionError.set(text);
+    else this.toast.show(text, 'danger');
   }
 
   print() { window.print(); }

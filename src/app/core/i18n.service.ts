@@ -96,6 +96,37 @@ const DICT = {
   contact: { en: 'Contact', es: 'Contacto' },
   print: { en: 'Print', es: 'Imprimir' },
   createdAt: { en: 'Created', es: 'Creado' },
+  githubConnect: { en: 'Connect to GitHub', es: 'Conectar con GitHub' },
+  githubHelp: {
+    en: 'Fine-grained token for this repository only (adminproac/HojaDeVida), with Contents: Read and write. It stays only in this browser (localStorage) and is sent only to api.github.com.',
+    es: 'Token de granularidad fina solo para este repositorio (adminproac/HojaDeVida), con Contents: Read and write. Permanece únicamente en este navegador (localStorage) y solo se envía a api.github.com.',
+  },
+  githubToken: { en: 'Personal access token', es: 'Token de acceso personal' },
+  githubTokenStored: { en: 'A token is already stored in this browser', es: 'Ya hay un token guardado en este navegador' },
+  githubSaveToken: { en: 'Save token', es: 'Guardar token' },
+  githubTest: { en: 'Test connection', es: 'Probar conexión' },
+  githubDisconnect: { en: 'Disconnect', es: 'Desconectar' },
+  githubConnected: { en: 'Connected', es: 'Conectado' },
+  githubNotConnected: { en: 'Not connected', es: 'Sin conexión' },
+  githubChecking: { en: 'Checking…', es: 'Comprobando…' },
+  githubReadOnly: {
+    en: 'Read-only. Connect a GitHub token to create, edit or delete. The token stays only in this browser.',
+    es: 'Solo lectura. Conecte un token de GitHub para crear, editar o eliminar. El token permanece solo en este navegador.',
+  },
+  githubLastCommit: { en: 'Last commit', es: 'Último commit' },
+  githubTestOk: { en: 'Connection succeeded (HTTP 200).', es: 'Conexión correcta (HTTP 200).' },
+  githubTestOkPush: { en: 'Connection succeeded (HTTP 200, permissions.push).', es: 'Conexión correcta (HTTP 200, permissions.push).' },
+  githubTestNoPush: {
+    en: 'The token did not report permissions.push. Saving still tries Contents: Read and write; if it fails, the error stays on screen.',
+    es: 'El token no informó permissions.push. Guardar igual intenta Contents: Read and write; si falla, el error queda en pantalla.',
+  },
+  githubSaveToEdit: { en: 'Save the token in this browser to edit.', es: 'Guarde el token en este navegador para poder editar.' },
+  githubNoToken: { en: 'Enter a token first.', es: 'Escriba un token primero.' },
+  githubReadError: { en: 'Could not read Data/resume-data.json from GitHub.', es: 'No se pudo leer Data/resume-data.json desde GitHub.' },
+  localMode: { en: 'Local API', es: 'API local' },
+  dismiss: { en: 'Dismiss', es: 'Cerrar' },
+  savedGithub: { en: 'Saved to GitHub. This page already shows the new data.', es: 'Guardado en GitHub. Esta página ya muestra los datos nuevos.' },
+  createdGithub: { en: 'Created on GitHub. This page already shows the new data.', es: 'Creado en GitHub. Esta página ya muestra los datos nuevos.' },
 } satisfies Record<string, Localized>;
 
 export type DictKey = keyof typeof DICT;

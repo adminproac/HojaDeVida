@@ -1,5 +1,7 @@
 <app-page-header [title]="'dashboard' | t" [crumbs]="[{ label: 'home' | t, link: '/dashboard' }, { label: 'dashboard' | t }]">
-  <a routerLink="/people/new" class="btn btn-primary"><i class="bi bi-person-plus mr-1"></i>{{ 'newPerson' | t }}</a>
+  @if (!store.readOnly()) {
+    <a routerLink="/people/new" class="btn btn-primary"><i class="bi bi-person-plus mr-1"></i>{{ 'newPerson' | t }}</a>
+  }
 </app-page-header>
 
 <div class="row">

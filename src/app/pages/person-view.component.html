@@ -1,8 +1,10 @@
 @if (person(); as p) {
   <app-page-header [title]="'resume' | t" [crumbs]="[{ label: 'home' | t, link: '/dashboard' }, { label: 'people' | t, link: '/people' }, { label: p.profile.fullName }]">
-    <button class="btn btn-light mr-1" (click)="print()" [title]="'print' | t"><i class="bi bi-printer"></i></button>
-    <a class="btn btn-success mr-1" [routerLink]="['/people', p.id, 'edit']"><i class="bi bi-pencil mr-1"></i>{{ 'editProfile' | t }}</a>
-    <button class="btn btn-danger" (click)="removePerson()" [title]="'delete' | t"><i class="bi bi-trash"></i></button>
+    <button type="button" class="btn btn-light mr-1" (click)="print()" [title]="'print' | t"><i class="bi bi-printer"></i></button>
+    @if (!store.readOnly()) {
+      <a class="btn btn-success mr-1" [routerLink]="['/people', p.id, 'edit']"><i class="bi bi-pencil mr-1"></i>{{ 'editProfile' | t }}</a>
+      <button type="button" class="btn btn-danger" (click)="removePerson()" [title]="'delete' | t"><i class="bi bi-trash"></i></button>
+    }
   </app-page-header>
 
   <div class="row">
@@ -46,17 +48,21 @@
           <div class="card-header py-3 d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold text-primary"><span class="section-icon"><i class="bi {{ s.icon }}"></i></span>{{ s.label | loc }}
               <span class="badge badge-primary ml-1">{{ items(s.key).length }}</span></h6>
-            <a class="btn btn-sm btn-primary" [routerLink]="['/people', p.id, s.key, 'new']"><i class="bi bi-plus-lg"></i> {{ 'add' | t }}</a>
+            @if (!store.readOnly()) {
+              <a class="btn btn-sm btn-primary" [routerLink]="['/people', p.id, s.key, 'new']"><i class="bi bi-plus-lg"></i> {{ 'add' | t }}</a>
+            }
           </div>
           <div class="card-body">
             @for (it of items(s.key); track it.id; let first = $first; let last = $last) {
               <div class="resume-item">
-                <div class="item-actions">
-                  <button class="btn btn-xs btn-light" [disabled]="first" (click)="move(s, it, 'up')" [title]="'moveUp' | t"><i class="bi bi-arrow-up"></i></button>
-                  <button class="btn btn-xs btn-light" [disabled]="last" (click)="move(s, it, 'down')" [title]="'moveDown' | t"><i class="bi bi-arrow-down"></i></button>
-                  <a class="btn btn-xs btn-success" [routerLink]="['/people', p.id, s.key, it.id]" [title]="'edit' | t"><i class="bi bi-pencil"></i></a>
-                  <button class="btn btn-xs btn-danger" (click)="removeItem(s, it)" [title]="'delete' | t"><i class="bi bi-trash"></i></button>
-                </div>
+                @if (!store.readOnly()) {
+                  <div class="item-actions">
+                    <button type="button" class="btn btn-xs btn-light" [disabled]="first" (click)="move(s, it, 'up')" [title]="'moveUp' | t"><i class="bi bi-arrow-up"></i></button>
+                    <button type="button" class="btn btn-xs btn-light" [disabled]="last" (click)="move(s, it, 'down')" [title]="'moveDown' | t"><i class="bi bi-arrow-down"></i></button>
+                    <a class="btn btn-xs btn-success" [routerLink]="['/people', p.id, s.key, it.id]" [title]="'edit' | t"><i class="bi bi-pencil"></i></a>
+                    <button type="button" class="btn btn-xs btn-danger" (click)="removeItem(s, it)" [title]="'delete' | t"><i class="bi bi-trash"></i></button>
+                  </div>
+                }
                 @switch (s.key) {
                   @case ('summary') { <p class="mb-0 item-text">{{ it['text'] | loc }}</p> }
                   @case ('additionalInfo') { <p class="mb-0"><i class="bi bi-check2-circle text-success mr-2"></i>{{ it['text'] | loc }}</p> }

@@ -24,7 +24,9 @@
         <div class="bg-white py-2 collapse-inner rounded">
           <h6 class="collapse-header">{{ 'people' | t }} ({{ store.people().length }})</h6>
           <a class="collapse-item" routerLink="/people" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"><i class="fas fa-fw fa-list mr-1"></i>{{ 'people' | t }}</a>
-          <a class="collapse-item" routerLink="/people/new" routerLinkActive="active"><i class="fas fa-fw fa-user-plus mr-1"></i>{{ 'newPerson' | t }}</a>
+          @if (!store.readOnly()) {
+            <a class="collapse-item" routerLink="/people/new" routerLinkActive="active"><i class="fas fa-fw fa-user-plus mr-1"></i>{{ 'newPerson' | t }}</a>
+          }
           @if (store.people().length) {
             <h6 class="collapse-header mt-2">{{ 'resume' | t }}</h6>
             @for (p of store.people(); track p.id) {
@@ -65,6 +67,18 @@
         <span class="d-none d-lg-inline text-gray-600 small">{{ 'welcome' | t }}</span>
 
         <ul class="navbar-nav ml-auto align-items-center">
+          @if (store.mode() === 'github') {
+            <li class="nav-item mx-1">
+              <span class="badge" [class.badge-success]="github.connected()" [class.badge-secondary]="!github.connected()">
+                <span class="gh-dot" [class.on]="github.connected()" [class.off]="!github.connected()"></span>
+                {{ (github.checking() ? 'githubChecking' : github.connected() ? 'githubConnected' : 'githubNotConnected') | t }}
+              </span>
+            </li>
+          } @else if (store.mode() === 'api') {
+            <li class="nav-item mx-1 d-none d-md-block">
+              <span class="badge badge-info"><i class="fas fa-server mr-1"></i>{{ 'localMode' | t }}</span>
+            </li>
+          }
           <li class="nav-item mx-1">
             <span class="small text-gray-600 mr-2 d-none d-sm-inline"><i class="fas fa-language"></i> {{ 'language' | t }}</span>
             <div class="btn-group btn-group-sm lang-toggle" role="group" aria-label="Language">
@@ -84,10 +98,25 @@
       <!-- End of Topbar -->
 
       <div class="container-fluid">
+        @if (store.mode() === 'github') {
+          <app-github-connect />
+        }
+        @if (store.readOnly()) {
+          <div class="alert alert-warning d-print-none" role="status"><i class="fas fa-lock mr-2"></i>{{ 'githubReadOnly' | t }}</div>
+        }
+        @if (store.actionError(); as actionError) {
+          <div class="alert alert-danger d-flex align-items-start justify-content-between d-print-none" role="alert">
+            <span><i class="fas fa-exclamation-circle mr-2"></i>{{ actionError }}</span>
+            <button type="button" class="btn btn-sm btn-light ml-3" (click)="store.actionError.set(null)">{{ 'dismiss' | t }}</button>
+          </div>
+        }
         @if (store.apiError()) {
-          <div class="alert alert-danger d-flex align-items-center justify-content-between">
-            <span><i class="fas fa-plug mr-2"></i>{{ 'apiDown' | t }}</span>
-            <button class="btn btn-sm btn-light" (click)="store.load()">{{ 'retry' | t }}</button>
+          <div class="alert alert-danger d-print-none" role="alert">
+            <div class="d-flex align-items-center justify-content-between">
+              <span><i class="fas fa-plug mr-2"></i>{{ (store.mode() === 'github' ? 'githubReadError' : 'apiDown') | t }}</span>
+              <button type="button" class="btn btn-sm btn-light" (click)="store.load()">{{ 'retry' | t }}</button>
+            </div>
+            @if (store.loadError(); as detail) { <div class="small mt-2 mb-0">{{ detail }}</div> }
           </div>
         }
         @if (store.loading() && !store.doc()) {
