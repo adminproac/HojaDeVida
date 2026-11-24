@@ -8,7 +8,7 @@
       "es"
     ],
     "source": "CV PDF provided by the owner (JESUS EDGAR DUARTE)",
-    "lastUpdated": "2026-11-24T21:42:20.584Z"
+    "lastUpdated": "2026-11-24T21:53:59.261Z"
   },
   "schema": {
     "conventions": {
@@ -1564,7 +1564,7 @@
           "id": "exp-003",
           "order": 3,
           "createdAt": "2026-11-23T22:55:00.000Z",
-          "updatedAt": "2026-11-23T22:55:00.000Z",
+          "updatedAt": "2026-11-24T21:53:59.260Z",
           "company": "MARITRANS S.A.",
           "title": {
             "en": "Systems Analyst / Developer",
@@ -1584,7 +1584,7 @@
               "order": 1,
               "text": {
                 "en": "Development and support of an integral logistics and billing system using Visual FoxPro, SQL Server, C#, and Reporting Services.",
-                "es": "Desarrollo y soporte de un sistema integral de logística y facturación utilizando Visual FoxPro, SQL Server, C# y Reporting Services."
+                "es": "DESARROLLO y soporte de un sistema integral de logística y facturación utilizando Visual FoxPro, SQL Server, C# y Reporting Services."
               }
             },
             {
@@ -2149,7 +2149,7 @@
         }
       ],
       "createdAt": "2026-11-23T22:55:00.000Z",
-      "updatedAt": "2026-11-24T21:38:42.588Z"
+      "updatedAt": "2026-11-24T21:53:59.261Z"
     },
     {
       "id": "person-c18d134b",
