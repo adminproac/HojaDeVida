@@ -8,7 +8,7 @@
       "es"
     ],
     "source": "CV PDF provided by the owner (JESUS EDGAR DUARTE)",
-    "lastUpdated": "2026-11-24T21:38:42.588Z"
+    "lastUpdated": "2026-11-24T21:42:20.584Z"
   },
   "schema": {
     "conventions": {
@@ -2150,6 +2150,31 @@
       ],
       "createdAt": "2026-11-23T22:55:00.000Z",
       "updatedAt": "2026-11-24T21:38:42.588Z"
+    },
+    {
+      "id": "person-c18d134b",
+      "createdAt": "2026-11-24T21:42:20.584Z",
+      "updatedAt": "2026-11-24T21:42:20.584Z",
+      "profile": {
+        "fullName": "MYRIAM ROCIO DUARTE CACERES",
+        "headline": {
+          "en": "System Enginnerr",
+          "es": "Ingeniero"
+        },
+        "email": "J.EDGAR.DUARTE.C@GMAIL.COM",
+        "phone": "3138259982",
+        "location": null,
+        "website": null,
+        "photoUrl": null
+      },
+      "summary": [],
+      "experience": [],
+      "otherExperience": [],
+      "education": [],
+      "skills": [],
+      "languages": [],
+      "certifications": [],
+      "additionalInfo": []
     }
   ]
 }
