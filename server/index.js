@@ -10,8 +10,11 @@ const fs = require('node:fs');
 const express = require('express');
 const store = require('./store');
 const { validate, newId, ValidationError } = require('./validate');
-const passwords = require('./password-crypto');
+const { loadEnv } = require('./env');
+const { githubIdentity } = require('./github-auth');
 const SCHEMA = require('../src/app/core/resume-schema.json');
+
+loadEnv();
 
 const PORT = Number(process.env.PORT) || 3000;
 const app = express();
@@ -54,115 +57,70 @@ const PREFIX = {
 const h = (fn) => (req, res, next) => Promise.resolve(fn(req, res)).catch(next);
 
 const api = express.Router();
-const sessions = new Map();
-const SESSION_MS = 5 * 60 * 1000;
 
-function publicUser(user) {
-  return { id: user.id, username: user.username, displayName: user.displayName };
-}
-
-function createSession(user) {
-  const token = passwordsBytes();
-  sessions.set(token, { id: user.id, username: user.username, displayName: user.displayName, expiresAt: Date.now() + SESSION_MS });
-  return token;
-}
-
-function passwordsBytes() {
-  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(32));
-  let binary = '';
-  for (const b of bytes) binary += String.fromCharCode(b);
-  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
-}
-
-function currentSession(req) {
-  const header = req.get('authorization') || '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
-  const session = token ? sessions.get(token) : null;
-  if (!session) return null;
-  if (session.expiresAt <= Date.now()) {
-    sessions.delete(token);
-    return null;
-  }
-  return session;
-}
-
-function assertStoredUser(user) {
-  if (!user || typeof user !== 'object') throw httpError(400, 'User record is required');
-  if (user.password != null || user.token != null || user.pat != null) throw httpError(400, 'Refusing a plaintext password or token');
-  if (!String(user.username || '').trim() || !String(user.displayName || '').trim() || !user.passwordHash || !user.salt) {
-    throw httpError(400, 'User record is incomplete');
-  }
-  if (Number(user.iterations) < passwords.ITERATIONS) throw httpError(400, 'Password hash is too weak');
+function applyCors(req, res, cors) {
+  if (!cors) return;
+  for (const [key, value] of Object.entries(cors)) res.setHeader(key, value);
 }
 
 api.use((req, res, next) => {
   if (req.method === 'GET' || req.method === 'HEAD') return next();
-  if (req.path === '/login' || req.path === '/session/touch' || req.path === '/users/bootstrap') return next();
-  const session = currentSession(req);
-  if (!session) return res.status(401).json({ message: '401 — Sesión requerida' });
-  session.expiresAt = Date.now() + SESSION_MS;
-  req.sessionUser = session;
-  next();
+  if (req.path === '/oauth/exchange' || req.path === '/oauth/config') return next();
+  const header = req.get('authorization') || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
+  if (!token) return res.status(401).json({ message: '401 — Sesión requerida' });
+  githubIdentity(token).then((identity) => {
+    if (!identity.ok) return res.status(403).json({ message: '403 — No tienes permiso para editar' });
+    next();
+  }).catch(() => res.status(403).json({ message: '403 — No tienes permiso para editar' }));
 });
 
 api.get('/health', (req, res) => res.json({ ok: true, dataFile: store.DATA_FILE, exists: store.exists() }));
 
-api.post('/login', h(async (req, res) => {
-  const username = String(req.body?.username || '').trim().toLowerCase();
-  const password = String(req.body?.password || '');
-  const doc = await store.read();
-  const user = (doc.users || []).find((item) => item.username.toLowerCase() === username);
-  if (!user || !(await passwords.verifyPassword(password, user))) return res.status(401).json({ message: '401 — Usuario o contraseña incorrectos' });
-  res.json({ token: createSession(user), user: publicUser(user) });
-}));
-
-api.post('/session/touch', (req, res) => {
-  const session = currentSession(req);
-  if (!session) return res.status(401).json({ message: '401 — Sesión requerida' });
-  session.expiresAt = Date.now() + SESSION_MS;
-  res.json({ ok: true });
+api.get('/oauth/config', (req, res) => {
+  const allowedLogins = String(process.env.GITHUB_ALLOWED_LOGINS || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+  res.json({
+    clientId: process.env.GITHUB_CLIENT_ID || '',
+    scope: 'public_repo',
+    redirectUri: 'http://localhost:4200/auth/callback',
+    allowedLogins,
+  });
 });
 
-api.post('/users/bootstrap', h(async (req, res) => {
-  const created = await store.update((doc) => {
-    if ((doc.users || []).length) throw httpError(409, 'Users already exist');
-    const user = req.body?.user;
-    assertStoredUser(user);
-    const record = { ...user, username: String(user.username).trim(), displayName: String(user.displayName).trim(), encryptedToken: user.encryptedToken || null };
-    doc.users = [record];
-    return record;
-  });
-  res.status(201).json({ token: createSession(created), user: publicUser(created) });
-}));
-
-api.put('/users/:id', h(async (req, res) => {
-  const saved = await store.update((doc) => {
-    const user = req.body?.user;
-    assertStoredUser(user);
-    if (user.id !== req.params.id) throw httpError(400, 'User id mismatch');
-    const users = doc.users || [];
-    const username = String(user.username).trim();
-    if (users.some((item) => item.username.toLowerCase() === username.toLowerCase() && item.id !== user.id)) {
-      throw httpError(409, `User '${username}' already exists`);
-    }
-    const index = users.findIndex((item) => item.id === user.id);
-    const record = { ...user, username, displayName: String(user.displayName).trim(), encryptedToken: user.encryptedToken || null };
-    if (index < 0) users.push(record);
-    else users[index] = record;
-    doc.users = users;
-    return record;
-  });
-  res.json(publicUser(saved));
-}));
-
-api.delete('/users/:id', h(async (req, res) => {
-  await store.update((doc) => {
-    const users = doc.users || [];
-    if (users.length <= 1) throw httpError(400, 'At least one user is required');
-    if (!users.some((item) => item.id === req.params.id)) throw httpError(404, `User '${req.params.id}' not found`);
-    doc.users = users.filter((item) => item.id !== req.params.id);
-  });
+api.options('/oauth/exchange', async (req, res) => {
+  const { corsFor } = await import('../worker/src/exchange.js');
+  const cors = corsFor(req.get('origin') || '');
+  if (!cors) return res.status(403).end();
+  applyCors(req, res, cors);
   res.status(204).end();
+});
+
+api.post('/oauth/exchange', h(async (req, res) => {
+  const { validateExchangeBody, exchangeCode, corsFor } = await import('../worker/src/exchange.js');
+  const origin = req.get('origin') || '';
+  const cors = corsFor(origin);
+  if (origin && !cors) return res.status(403).json({ message: 'Origen no permitido' });
+  applyCors(req, res, cors);
+  const parsed = validateExchangeBody(req.body);
+  if (!parsed.ok) return res.status(parsed.status).json({ message: parsed.message });
+  try {
+    const token = await exchangeCode(fetch, {
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      code: parsed.code,
+      redirectUri: parsed.redirectUri,
+    });
+    res.json(token);
+  } catch (err) {
+    const status = Number(err.status) || 401;
+    const message = status === 503
+      ? 'Falta configurar el inicio de sesión con GitHub (ver README)'
+      : 'No se pudo iniciar sesión con GitHub';
+    res.status(status).json({ message });
+  }
 }));
 
 api.get('/data', h(async (req, res) => res.json(await store.read())));

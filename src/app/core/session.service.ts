@@ -1,273 +1,221 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { NavigationEnd, Router } from '@angular/router';
-import { filter } from 'rxjs';
+import { Router } from '@angular/router';
 import { setApiSessionToken } from './auth.interceptor';
-import { GithubService, clearLegacyToken, readLegacyToken } from './github.service';
-import { DataService } from './data.service';
+import { GithubService, clearLegacyToken } from './github.service';
 import { I18nService } from './i18n.service';
-import { ResumeUser } from './models';
-import { decryptToken, encryptToken, hashPassword, verifyPassword } from './password-crypto';
+import { environment } from '../../environments/environment';
+import {
+  LEGACY_SESSION_KEY,
+  OAUTH_STATE_KEY,
+  createOauthState,
+  exchangeEndpoint,
+  isOauthCallbackPath,
+  oauthConfigured,
+  oauthRedirectUri,
+  oauthStateMatches,
+} from './oauth';
 import { SESSION_TIMEOUT_MS, sessionClock } from './session-clock';
-import { StoreService } from './store.service';
 import { ToastService } from './toast.service';
 
-const SESSION_KEY = 'resume-admin.session';
-
-interface PersistedSession {
-  userId: string;
-  username: string;
+interface GithubProfile {
+  login: string;
   displayName: string;
-  token: string | null;
-  apiToken: string | null;
-  lastActivity: number;
+  avatarUrl: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class SessionService {
-  private store = inject(StoreService);
-  private data = inject(DataService);
   private github = inject(GithubService);
   private toast = inject(ToastService);
   private i18n = inject(I18nService);
   private router = inject(Router);
 
   readonly authenticated = signal(false);
-  readonly userId = signal<string | null>(null);
   readonly username = signal('');
   readonly displayName = signal('');
+  readonly avatarUrl = signal('');
   readonly logoutReason = signal<string | null>(null);
-  readonly offerLegacyToken = signal(false);
-  readonly needsToken = signal(false);
-  private password = '';
-  private apiToken: string | null = null;
+  readonly configured = signal(false);
+  readonly configReady = signal(false);
+  readonly callbackPending = signal(isOauthCallbackPath(window.location.pathname));
+
+  private clientId = '';
+  private proxyUrl = '';
+  private allowedLogins: string[] = environment.allowedLogins || [];
   private warned = false;
   private lastActivity = 0;
-  private lastTouch = 0;
+  private finishing: Promise<string | null> | null = null;
 
   readonly gate = computed(() => {
-    if (this.store.loading() && !this.store.doc()) return 'loading' as const;
-    if (!this.store.doc()) return 'error' as const;
-    if (!(this.store.doc()?.users || []).length) return 'setup' as const;
+    if (this.callbackPending() && !this.authenticated()) return 'callback' as const;
     if (!this.authenticated()) return 'login' as const;
     return 'app' as const;
   });
 
   constructor() {
-    this.restore();
+    clearLegacyToken();
+    try { sessionStorage.removeItem(LEGACY_SESSION_KEY); } catch { /* private mode */ }
     const bump = () => this.bump();
     for (const name of ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'] as const) {
       window.addEventListener(name, bump, { passive: true });
     }
-    this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => this.bump());
     window.setInterval(() => this.check(), 1000);
+    void this.loadConfig();
   }
 
-  async login(username: string, password: string) {
-    const user = this.findUser(username);
-    if (!user || !(await verifyPassword(password, user))) throw new Error('bad-login');
-    let apiToken: string | null = null;
-    if (this.data.mode() === 'api') {
-      const result = await this.data.login(user.username, password);
-      apiToken = result.token;
+  async loadConfig() {
+    if (!environment.production) {
+      try {
+        const res = await fetch('/api/oauth/config', { cache: 'no-store' });
+        if (res.ok) {
+          const body = await res.json();
+          const clientId = typeof body?.clientId === 'string' ? body.clientId.trim() : '';
+          if (clientId) {
+            this.clientId = clientId;
+            this.proxyUrl = '';
+            this.allowedLogins = Array.isArray(body?.allowedLogins)
+              ? body.allowedLogins.filter((item: unknown) => typeof item === 'string' && item.trim()).map((item: string) => item.trim())
+              : [];
+            this.configured.set(true);
+            this.configReady.set(true);
+            return;
+          }
+        }
+      } catch {
+        // Sin API local se usa la configuración compilada.
+      }
     }
-    let token: string | null = null;
-    if (user.encryptedToken) {
-      try { token = await decryptToken(password, user.encryptedToken); } catch { token = null; }
-    }
-    this.password = password;
-    this.apiToken = apiToken;
-    this.begin(user, token, apiToken);
-    this.offerLegacyToken.set(!!readLegacyToken() && !user.encryptedToken);
-    this.needsToken.set(!token);
+    this.clientId = environment.oauthClientId.trim();
+    this.proxyUrl = environment.oauthProxyUrl.trim();
+    this.allowedLogins = environment.allowedLogins || [];
+    this.configured.set(oauthConfigured(this.clientId, this.proxyUrl, environment.production));
+    this.configReady.set(true);
   }
 
-  async bootstrap(input: { username: string; displayName: string; password: string; token: string | null }) {
-    const user = await this.buildUser(input.username, input.displayName, input.password, input.token);
-    if (this.data.mode() === 'github') {
-      if (!input.token) throw new Error('token-required');
-      this.github.useMemoryToken(input.token);
-    }
-    const result = await this.data.bootstrapUser(user);
-    if (result.token) setApiSessionToken(result.token);
-    this.password = input.password;
-    this.apiToken = result.token || null;
-    this.begin(user, input.token, result.token || null);
-    this.needsToken.set(!input.token);
-    await this.store.load();
+  startLogin() {
+    if (!this.configured() || !this.clientId) return;
+    const state = createOauthState();
+    sessionStorage.setItem(OAUTH_STATE_KEY, state);
+    const url = new URL('https://github.com/login/oauth/authorize');
+    url.searchParams.set('client_id', this.clientId);
+    url.searchParams.set('redirect_uri', oauthRedirectUri(document.baseURI));
+    url.searchParams.set('scope', environment.oauthScope || 'public_repo');
+    url.searchParams.set('state', state);
+    window.location.assign(url.toString());
   }
 
-  async replaceToken(password: string, plain: string) {
-    const user = this.currentRecord();
-    if (!user || !(await verifyPassword(password, user))) throw new Error('bad-login');
-    const encryptedToken = await encryptToken(password, plain.trim());
-    const next = { ...user, encryptedToken, updatedAt: new Date().toISOString() };
-    await this.data.saveUser(next);
-    this.password = password;
-    this.github.useMemoryToken(plain.trim());
-    clearLegacyToken();
-    this.needsToken.set(false);
-    await this.store.load();
+  finishRedirect(): Promise<string | null> {
+    if (!this.finishing) this.finishing = this.finishRedirectNow();
+    return this.finishing;
   }
 
-  async storeToken(plain: string) {
-    const user = this.currentRecord();
-    if (!user || !this.password) throw new Error('relogin');
-    const encryptedToken = await encryptToken(this.password, plain.trim());
-    const next = { ...user, encryptedToken, updatedAt: new Date().toISOString() };
-    await this.data.saveUser(next);
-    this.github.useMemoryToken(plain.trim());
-    clearLegacyToken();
-    this.needsToken.set(false);
-    this.offerLegacyToken.set(false);
-    this.persist();
-    await this.store.load();
-  }
-
-  async acceptLegacyToken() {
-    const legacy = readLegacyToken();
-    if (!legacy) { this.offerLegacyToken.set(false); return; }
-    await this.storeToken(legacy);
-  }
-
-  dismissTokenPrompt() {
-    this.needsToken.set(false);
-    this.offerLegacyToken.set(false);
-  }
-
-  async createUser(username: string, displayName: string, password: string) {
-    const user = await this.buildUser(username, displayName, password, null);
-    await this.data.saveUser(user);
-    await this.store.load();
-  }
-
-  async changePassword(userId: string, currentPassword: string, nextPassword: string) {
-    const user = (this.store.doc()?.users || []).find((item) => item.id === userId);
-    if (!user || !(await verifyPassword(currentPassword, user))) throw new Error('bad-login');
-    const hashed = await hashPassword(nextPassword);
-    let encryptedToken = user.encryptedToken;
-    if (user.encryptedToken) {
-      const token = await decryptToken(currentPassword, user.encryptedToken);
-      encryptedToken = await encryptToken(nextPassword, token);
-    }
-    const next = { ...user, ...hashed, encryptedToken, updatedAt: new Date().toISOString() };
-    await this.data.saveUser(next);
-    if (userId === this.userId()) this.password = nextPassword;
-    await this.store.load();
-  }
-
-  async removeUser(userId: string) {
-    await this.data.deleteUser(userId);
-    if (userId === this.userId()) this.logout('removed');
-    await this.store.load();
-  }
-
-  logout(reason: 'idle' | 'manual' | 'removed' = 'manual') {
-    this.password = '';
+  logout(reason: 'idle' | 'manual' = 'manual') {
     this.authenticated.set(false);
-    this.userId.set(null);
     this.username.set('');
     this.displayName.set('');
-    this.needsToken.set(false);
-    this.offerLegacyToken.set(false);
+    this.avatarUrl.set('');
     this.warned = false;
-    this.apiToken = null;
-    this.github.useMemoryToken(null);
+    this.github.clearToken();
     setApiSessionToken(null);
-    sessionStorage.removeItem(SESSION_KEY);
+    try { sessionStorage.removeItem(OAUTH_STATE_KEY); } catch { /* private mode */ }
+    try { sessionStorage.removeItem(LEGACY_SESSION_KEY); } catch { /* private mode */ }
+    clearLegacyToken();
+    this.callbackPending.set(false);
     if (reason === 'idle') this.logoutReason.set(this.i18n.t('sessionIdle'));
+    if (!window.location.pathname.endsWith('/auth/callback')) void this.router.navigateByUrl('/');
   }
 
-  private begin(user: Pick<ResumeUser, 'id' | 'username' | 'displayName'>, token: string | null, apiToken: string | null) {
+  private async finishRedirectNow(): Promise<string | null> {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    const providerError = params.get('error');
+    let stored: string | null = null;
+    try { stored = sessionStorage.getItem(OAUTH_STATE_KEY); } catch { stored = null; }
+    try { sessionStorage.removeItem(OAUTH_STATE_KEY); } catch { /* private mode */ }
+    if (providerError || !code || !oauthStateMatches(stored, state)) {
+      this.callbackPending.set(false);
+      const key = providerError === 'access_denied' ? 'oauthDenied' : 'oauthState';
+      this.logoutReason.set(this.i18n.t(key));
+      await this.router.navigateByUrl('/', { replaceUrl: true });
+      return this.i18n.t(key);
+    }
+    try {
+      if (!this.configReady()) await this.loadConfig();
+      const res = await fetch(exchangeEndpoint(this.proxyUrl), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          code,
+          state,
+          redirect_uri: oauthRedirectUri(document.baseURI),
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      const token = typeof body?.access_token === 'string' ? body.access_token : '';
+      if (!res.ok || !token) throw new Error(res.status === 503 ? 'missing' : 'failed');
+      const profile = await this.githubProfile(token);
+      this.begin(profile, token);
+      await this.router.navigateByUrl('/dashboard', { replaceUrl: true });
+      return null;
+    } catch (err) {
+      this.github.clearToken();
+      setApiSessionToken(null);
+      this.callbackPending.set(false);
+      const key = err instanceof Error && err.message === 'denied'
+        ? 'oauthDenied'
+        : err instanceof Error && err.message === 'missing'
+          ? 'oauthMissing'
+          : 'oauthFailed';
+      this.logoutReason.set(this.i18n.t(key));
+      await this.router.navigateByUrl('/', { replaceUrl: true });
+      return this.i18n.t(key);
+    }
+  }
+
+  private async githubProfile(token: string): Promise<GithubProfile> {
+    const headers = {
+      Accept: 'application/vnd.github+json',
+      Authorization: `Bearer ${token}`,
+      'X-GitHub-Api-Version': '2022-11-28',
+    };
+    const userRes = await fetch('https://api.github.com/user', { headers, cache: 'no-store' });
+    if (!userRes.ok) throw new Error('failed');
+    const user = await userRes.json();
+    const repoRes = await fetch(`https://api.github.com/repos/${environment.repoOwner}/${environment.repoName}`, { headers, cache: 'no-store' });
+    const repo = await repoRes.json().catch(() => ({}));
+    const login = String(user?.login || '');
+    const allow = this.allowedLogins.map((item) => item.toLowerCase());
+    const push = repoRes.ok && repo?.permissions?.push === true;
+    if (!login || !push || (allow.length > 0 && !allow.includes(login.toLowerCase()))) throw new Error('denied');
+    return {
+      login,
+      displayName: String(user?.name || login),
+      avatarUrl: typeof user?.avatar_url === 'string' ? user.avatar_url : '',
+    };
+  }
+
+  private begin(profile: GithubProfile, token: string) {
     this.logoutReason.set(null);
-    this.userId.set(user.id);
-    this.username.set(user.username);
-    this.displayName.set(user.displayName);
-    this.authenticated.set(true);
+    this.username.set(profile.login);
+    this.displayName.set(profile.displayName);
+    this.avatarUrl.set(profile.avatarUrl);
     this.lastActivity = Date.now();
     this.warned = false;
     this.github.useMemoryToken(token);
-    setApiSessionToken(apiToken);
-    this.persist();
-    if (token) void this.github.testConnection().catch(() => undefined);
-  }
-
-  private async buildUser(username: string, displayName: string, password: string, token: string | null): Promise<ResumeUser> {
-    const hashed = await hashPassword(password);
-    const now = new Date().toISOString();
-    return {
-      id: `user-${crypto.randomUUID().slice(0, 8)}`,
-      username: username.trim(),
-      displayName: displayName.trim(),
-      ...hashed,
-      encryptedToken: token ? await encryptToken(password, token) : null,
-      createdAt: now,
-      updatedAt: now,
-    };
-  }
-
-  private findUser(username: string): ResumeUser | undefined {
-    const name = username.trim().toLowerCase();
-    return (this.store.doc()?.users || []).find((user) => user.username.toLowerCase() === name);
-  }
-
-  private currentRecord(): ResumeUser | undefined {
-    return (this.store.doc()?.users || []).find((user) => user.id === this.userId());
-  }
-
-  private restore() {
-    const raw = sessionStorage.getItem(SESSION_KEY);
-    if (!raw) return;
-    try {
-      const saved = JSON.parse(raw) as PersistedSession;
-      if (sessionClock(saved.lastActivity, Date.now()) === 'expired') {
-        sessionStorage.removeItem(SESSION_KEY);
-        return;
-      }
-      this.userId.set(saved.userId);
-      this.username.set(saved.username);
-      this.displayName.set(saved.displayName);
-      this.authenticated.set(true);
-      this.lastActivity = saved.lastActivity;
-      this.apiToken = saved.apiToken;
-      this.github.useMemoryToken(saved.token);
-      setApiSessionToken(saved.apiToken);
-      if (saved.token) void this.github.testConnection().catch(() => undefined);
-    } catch {
-      sessionStorage.removeItem(SESSION_KEY);
-    }
-  }
-
-  private persist() {
-    if (!this.authenticated()) return;
-    const saved: PersistedSession = {
-      userId: this.userId() || '',
-      username: this.username(),
-      displayName: this.displayName(),
-      token: this.github.token(),
-      apiToken: this.apiToken,
-      lastActivity: this.lastActivity,
-    };
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(saved));
+    setApiSessionToken(token);
+    this.authenticated.set(true);
+    this.callbackPending.set(false);
   }
 
   private bump() {
     if (!this.authenticated()) return;
     this.lastActivity = Date.now();
     this.warned = false;
-    this.persist();
-    if (this.data.mode() === 'api' && Date.now() - this.lastTouch > 20000) {
-      this.lastTouch = Date.now();
-      void this.data.touchSession().catch(() => undefined);
-    }
   }
 
   private check() {
     if (!this.authenticated()) return;
-    const doc = this.store.doc();
-    if (doc && this.userId() && !(doc.users || []).some((user) => user.id === this.userId()) && (doc.users || []).length) {
-      this.logout('removed');
-      return;
-    }
     const phase = sessionClock(this.lastActivity, Date.now());
     if (phase === 'expired') this.logout('idle');
     else if (phase === 'warning' && !this.warned) {

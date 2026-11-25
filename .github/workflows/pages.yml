@@ -32,6 +32,13 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: OAuth config
+        run: node scripts/write-oauth-env.js
+        env:
+          OAUTH_CLIENT_ID: ${{ vars.OAUTH_CLIENT_ID }}
+          OAUTH_PROXY_URL: ${{ vars.OAUTH_PROXY_URL }}
+          OAUTH_ALLOWED_LOGINS: ${{ vars.OAUTH_ALLOWED_LOGINS }}
+
       - name: Build
         run: npx ng build --base-href /HojaDeVida/
         env:

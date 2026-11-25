@@ -22,11 +22,11 @@ npm install
 npm start
 ```
 
-La versión publicada está en https://adminproac.github.io/HojaDeVida/. Para guardar desde esa página hace falta un token; los pasos están en la sección siguiente.
+La versión publicada está en https://adminproac.github.io/HojaDeVida/. Para guardar desde esa página hay que **iniciar sesión con GitHub**. No se pega ningún token. Los pasos están en la sección siguiente.
 
 ---
 
-## Sitio en vivo y token de GitHub
+## Sitio en vivo e inicio de sesión con GitHub
 
 La aplicación publicada está en **https://adminproac.github.io/HojaDeVida/**.
 
@@ -34,18 +34,73 @@ En el repositorio, **Settings → Pages → Build and deployment → Source** de
 
 El sitio elige el modo solo:
 
-- Si la API local responde (por ejemplo con `npm start` en su equipo o en Codespaces), cada cambio se guarda como hasta ahora: la API de Node escribe `Data/resume-data.json`.
-- Si no hay API (GitHub Pages), la página entra en **modo GitHub**. Lee `Data/resume-data.json` del repositorio. Sin token es **solo lectura**. Con token, cada alta, edición o eliminación hace un commit de ese JSON en `main`.
+- Si la API local responde (por ejemplo con `npm start` en su equipo), cada cambio se guarda como hasta ahora: la API de Node escribe `Data/resume-data.json`.
+- Si no hay API (GitHub Pages), la página entra en **modo GitHub**. Lee `Data/resume-data.json` del repositorio. Al iniciar sesión, GitHub entrega un token que **solo vive en la memoria de esa pestaña**. Con ese token, cada alta, edición o eliminación hace un commit del JSON en `main`.
 
 Ese commit vuelve a publicar el sitio. No hace falta esperar la publicación: la página muestra los datos nuevos en cuanto el commit termina.
 
-### Crear el token (granularidad fina)
+Quién puede editar: una cuenta de GitHub con **permiso push** en `adminproac/HojaDeVida`. Las demás ven «No tienes permiso para editar». El alcance pedido es `public_repo` porque el repositorio es público. Si el repositorio pasa a ser **privado**, hay que cambiar `oauthScope` a `repo` en `src/environments/environment.ts` (y el build de Pages usa el mismo valor).
 
-1. En GitHub abra **Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**.
-2. Resource owner: su usuario. Repository access: **Only select repositories** y elija solo `adminproac/HojaDeVida`.
-3. Permissions → Repository permissions → **Contents: Read and write**. No hace falta ningún otro permiso.
-4. Genere el token. En la primera pantalla de la aplicación péguelo al crear el usuario. Para cambiarlo después, entre y abra **Usuarios → Cambiar token de GitHub**.
-5. El token se **cifra con su contraseña** y se guarda en su usuario dentro del JSON (`encryptedToken`). No queda en el código ni en el almacenamiento del navegador. Al cerrar sesión, o tras 5 minutos sin uso, se borra la copia descifrada.
+Hasta que configure la OAuth App y el Worker, la página muestra: **Falta configurar el inicio de sesión con GitHub (ver README)**. No se rompe.
+
+### a) Crear la OAuth App de GitHub (sitio en vivo)
+
+1. Abra https://github.com/settings/applications/new (iniciado como el dueño del repositorio).
+2. Rellene **exactamente** estos valores:
+   - **Application name:** `Hoja de vida`
+   - **Homepage URL:** `https://adminproac.github.io/HojaDeVida/`
+   - **Authorization callback URL:** `https://adminproac.github.io/HojaDeVida/auth/callback`
+3. Pulse **Register application**.
+4. Copie el **Client ID**. Lo va a pegar en dos sitios: la variable `OAUTH_CLIENT_ID` del repositorio y el secreto `GITHUB_CLIENT_ID` de Cloudflare.
+5. Pulse **Generate a new client secret** y copie el **Client Secret** en ese momento. Solo va al secreto `GITHUB_CLIENT_SECRET` de Cloudflare (y, si prueba en su PC, al archivo `.env`). **No** lo pegue en el código, en el JSON, ni en una variable de GitHub Actions.
+
+GitHub solo guarda **un** callback por aplicación. La de arriba es la del sitio publicado. Para probar en su computadora hace falta **otra** OAuth App, con:
+
+- **Homepage URL:** `http://localhost:4200/`
+- **Authorization callback URL:** `http://localhost:4200/auth/callback`
+
+Ese segundo Client ID y su secreto van solo en `.env`.
+
+### b) Publicar el proxy en Cloudflare (gratis)
+
+El navegador no puede canjear el código de GitHub: el secreto no puede estar en la página. Un Worker hace solo ese canje (`POST /api/oauth/exchange`) y devuelve el token. No lo guarda ni lo escribe en registros.
+
+1. Cree una cuenta gratis en https://dash.cloudflare.com/sign-up
+2. En su computadora, con Node.js instalado:
+
+```bash
+npm install -g wrangler
+wrangler login
+cd worker
+wrangler secret put GITHUB_CLIENT_ID
+wrangler secret put GITHUB_CLIENT_SECRET
+wrangler deploy
+```
+
+3. Cuando pida cada secreto, pegue el valor de la OAuth App del **sitio en vivo** y pulse Enter. No quedan en el repositorio.
+4. Al terminar, `wrangler deploy` muestra una dirección como `https://hojadevida-oauth.<su-subdominio>.workers.dev`. Cópiela **sin** barra al final y **sin** `/api/...`. Esa dirección es `OAUTH_PROXY_URL`.
+
+### c) Variables del repositorio (no hace falta editar código)
+
+En GitHub: repositorio **adminproac/HojaDeVida** → **Settings** → **Secrets and variables** → **Actions** → pestaña **Variables** → **New repository variable**.
+
+| Nombre | Valor |
+|---|---|
+| `OAUTH_CLIENT_ID` | El Client ID de la OAuth App del sitio en vivo |
+| `OAUTH_PROXY_URL` | La dirección `https://hojadevida-oauth.<su-subdominio>.workers.dev` |
+| `OAUTH_ALLOWED_LOGINS` | Opcional. Logins de GitHub separados por coma. Si la deja vacía o no la crea, entra cualquiera con permiso push |
+
+El **Client Secret no es una variable**. Si faltan `OAUTH_CLIENT_ID` o `OAUTH_PROXY_URL`, el workflow avisa y el sitio se publica con el mensaje «Falta configurar el inicio de sesión con GitHub (ver README)». Cuando las cree, haga un push a `main` (o vuelva a ejecutar el workflow **Deploy to GitHub Pages**) para que el botón **Iniciar sesión con GitHub** aparezca.
+
+### d) Modo local (`.env`)
+
+```bash
+cp .env.example .env
+```
+
+Edite `.env` con el Client ID y el Client Secret de la OAuth App de **localhost** (la segunda). Opcional: `GITHUB_ALLOWED_LOGINS=su-usuario`. Luego `npm start`. La API lee `.env` y la página, en http://localhost:4200/, ofrece el mismo botón. El archivo `.env` está en `.gitignore`.
+
+El token que entrega GitHub no se guarda en `localStorage` ni en `sessionStorage`. **Cerrar sesión**, o 5 minutos sin usar la página, lo borra de la memoria. Un aviso aparece 30 segundos antes. Mover el mouse, escribir, hacer clic o cambiar de página renueva el plazo. Recargar la pestaña también pide iniciar sesión otra vez.
 
 ---
 
@@ -56,7 +111,7 @@ En el menú está **Cargar hoja de vida (PDF)**. Elija un archivo PDF. La lectur
 1. Se extrae el texto del PDF.
 2. Se reconocen el nombre, el correo, el teléfono y LinkedIn, y secciones en español o inglés (Resumen, Experiencia, Educación, Habilidades, Idiomas, Certificaciones, y sus equivalentes en inglés).
 3. Aparece una **revisión editable** con los mismos formularios de la aplicación. Corrija lo que haya quedado mal.
-4. Guarde como **persona nueva**, o elija una persona existente y confirme para reemplazarla. El guardado usa la API local (`npm start`) o, en GitHub Pages, un commit del JSON si hay un token.
+4. Guarde como **persona nueva**, o elija una persona existente y confirme para reemplazarla. El guardado usa la API local (`npm start`) o, en GitHub Pages, un commit del JSON con la sesión de GitHub.
 
 Límites:
 
@@ -166,18 +221,13 @@ También puede usar `Terminal > Ejecutar tarea…` → **npm: serve (API + Angul
 - Fechas: `AAAA-MM` (p. ej. `2022-08`). Marcas de tiempo: ISO 8601.
 - El archivo **no** incluye tipos ni tamaños. Solo `meta` (versión, idioma) y `people` (los datos, incluidos `id`, `createdAt`, `updatedAt` y `order`).
 - Las reglas de cada campo (`type`, `required`, `maxLength`, `format`, etiquetas EN/ES) están en `src/app/core/resume-schema.json`. La página **Esquema de datos** las muestra. Los formularios y la API validan con esas reglas.
-- Si abre un archivo antiguo que todavía trae `schema`, la aplicación lo ignora y lo quita en el siguiente guardado. Las personas no se modifican.
+- Si abre un archivo antiguo que todavía trae `schema` o `users`, la aplicación los ignora y los quita en el siguiente guardado. Las personas no se modifican.
 
 ## Inicio de sesión
 
-Antes de las demás pantallas la aplicación pide usuario y contraseña. El repositorio y el JSON son **públicos**: el inicio de sesión controla quién usa la aplicación para editar; no oculta los datos. Cualquiera puede leer `Data/resume-data.json`.
+Antes de las demás pantallas la aplicación muestra **Iniciar sesión con GitHub**. El repositorio y el JSON son **públicos**: el inicio de sesión controla quién usa la aplicación para editar; no oculta los datos. Cualquiera puede leer `Data/resume-data.json`.
 
-- No hay una contraseña inicial en el repositorio. Si `users` está vacío, la primera pantalla crea el administrador (usuario, nombre y contraseña). La contraseña se guarda como hash **PBKDF2-SHA256** (210000 iteraciones y una sal aleatoria), nunca en texto plano.
-- El token de GitHub se cifra con **AES-GCM**. La clave sale de la contraseña del usuario (otra sal, distinta de la de la contraseña) y el resultado queda en `encryptedToken`. Al entrar, se descifra solo en la memoria de esa pestaña. No se escribe en `localStorage` ni en el código.
-- Si este navegador todavía tenía un token guardado a la antigua, la aplicación ofrece cifrarlo en el usuario y borrarlo del navegador.
-- Si no usa la página durante **5 minutos**, la sesión se cierra, el token descifrado se borra y verá «Sesión cerrada por inactividad». Un aviso aparece 30 segundos antes. Mover el mouse, escribir, hacer clic o cambiar de página renueva el plazo.
-- En su equipo (`npm start`) la API también comprueba la contraseña. En GitHub Pages hace falta ese token cifrado para guardar cambios.
-- En **Usuarios** se pueden crear cuentas, cambiar la contraseña y eliminarlas. Siempre debe quedar al menos una.
+No hay usuarios ni contraseñas dentro del JSON. La cuenta es la de GitHub, y solo entra quien tenga permiso push en `adminproac/HojaDeVida`. El botón **Cerrar sesión** está en la barra superior (con el nombre de GitHub) y al final de la barra lateral.
 
 ## 6. Copias de seguridad
 
@@ -209,6 +259,7 @@ El diseño usa **[SB Admin 2](https://startbootstrap.com/theme/sb-admin-2) v4.1.
 ```text
 Resume/
 ├─ Data/resume-data.json      ← solo datos: meta + people (y Data/backups/ para copias)
+├─ worker/                    ← proxy de Cloudflare que canjea el código OAuth
 ├─ server/                    ← API Node/Express (index.js, store.js, validate.js)
 ├─ scripts/backup.js          ← npm run backup
 ├─ src/vendor/sb-admin-2/      ← CSS de SB Admin 2 + LICENSE (MIT)
@@ -249,7 +300,7 @@ npm install
 npm start          # API on :3000 + Angular on :4200 (opens the browser)
 ```
 
-Live site: https://adminproac.github.io/HojaDeVida/. Sign in first. On GitHub Pages, saving needs the fine-grained token entered when the user is created or later under **Usuarios → Cambiar token de GitHub**. The token is encrypted with the password inside the JSON and is not stored in the browser. See the Spanish section above.
+Live site: https://adminproac.github.io/HojaDeVida/. Sign in with GitHub (no pasted token). The access token stays in memory for the session. See the Spanish section for the OAuth App, the Cloudflare Worker, and the repository variables `OAUTH_CLIENT_ID` and `OAUTH_PROXY_URL`. Scope is `public_repo` while the repository is public; a private repository would need `repo`.
 Other scripts: `npm run dev` (API auto-restart), `npm run serve` (no browser), `npm run build`, `npm run start:prod` (serve the built app from the API on :3000), `npm run backup`.
 
 ### VS Code
@@ -264,6 +315,8 @@ Open the folder, accept the recommended extensions, run `npm install`, then **Ru
 | Method | Route | Description |
 |---|---|---|
 | GET | `/health` | Status and data-file path |
+| GET | `/oauth/config` | Public Client ID for local sign-in (never the secret) |
+| POST | `/oauth/exchange` | Exchange `{ code, state }` for a GitHub token. Writes otherwise require that token and `permissions.push` |
 | GET | `/data` · `/schema` | Whole document · schema only |
 | GET | `/people?q=` | List / search people |
 | POST | `/people` | Create a person `{ profile }` |

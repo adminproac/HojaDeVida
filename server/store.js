@@ -25,6 +25,7 @@ function asData(doc) {
   }
   if (!doc.meta || typeof doc.meta !== 'object') doc.meta = {};
   if (!Array.isArray(doc.people)) doc.people = [];
+  if ('users' in doc) delete doc.users;
   return doc;
 }
 

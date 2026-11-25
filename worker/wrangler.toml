@@ -1,0 +1,8 @@
+# Proxy mínimo para canjear el código de GitHub OAuth.
+# El Client ID y el Client Secret NO van aquí: se cargan con
+#   wrangler secret put GITHUB_CLIENT_ID
+#   wrangler secret put GITHUB_CLIENT_SECRET
+name = "hojadevida-oauth"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+workers_dev = true

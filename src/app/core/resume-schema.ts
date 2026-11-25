@@ -19,5 +19,6 @@ export function asDataDocument<T extends ResumeDocument>(doc: T): T {
     doc.meta = { schemaVersion: '3.0.0', defaultLanguage: 'es', supportedLanguages: ['en', 'es'], lastUpdated: new Date().toISOString() };
   }
   if (!Array.isArray(doc.people)) doc.people = [];
+  if ('users' in doc) delete doc.users;
   return doc;
 }

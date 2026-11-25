@@ -65,29 +65,12 @@ export interface Person {
   [section: string]: any;
 }
 
-export interface EncryptedToken {
-  salt: string;
-  iv: string;
-  ciphertext: string;
-}
-
-export interface ResumeUser {
-  id: string;
-  username: string;
-  displayName: string;
-  passwordHash: string;
-  salt: string;
-  iterations: number;
-  encryptedToken: EncryptedToken | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface ResumeDocument {
   meta: { schemaVersion: string; defaultLanguage: Lang; supportedLanguages: Lang[]; lastUpdated: string; [k: string]: unknown };
   /** Present only in files saved before version 3. Ignored and removed on the next save. */
   schema?: DataSchema;
-  users?: ResumeUser[];
+  /** Cuentas antiguas con contraseña. Se ignoran y se quitan al guardar. */
+  users?: unknown;
   people: Person[];
 }
 

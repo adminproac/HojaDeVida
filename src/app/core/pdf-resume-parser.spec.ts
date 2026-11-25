@@ -3,9 +3,10 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 import { describe, expect, it } from 'vitest';
-import { DataSchema } from './models';
-import { decryptToken, encryptToken, hashPassword, verifyPassword } from './password-crypto';
+import { DataSchema, ResumeDocument } from './models';
+import { exchangeEndpoint, oauthConfigured, oauthRedirectUri, oauthStateMatches, tokenIsOnlyInMemory } from './oauth';
 import { parseResumeText } from './pdf-resume-parser';
+import { asDataDocument } from './resume-schema';
 import { SESSION_TIMEOUT_MS, SESSION_WARN_MS, sessionClock } from './session-clock';
 import { extractPdfText } from './pdf-text';
 
@@ -56,30 +57,62 @@ describe('resume data file', () => {
   it('stores people only, without field types or sizes', () => {
     const doc = JSON.parse(readFileSync(path.resolve('Data/resume-data.json'), 'utf8'));
     expect(doc.schema).toBeUndefined();
+    expect(doc.users).toBeUndefined();
     expect(doc.meta.schemaVersion).toBe('3.0.0');
     expect(doc.meta.defaultLanguage).toBe('es');
-    expect(doc.users).toEqual([]);
+    expect(doc.people).toHaveLength(7);
     expect(doc.people.length).toBeGreaterThan(0);
     expect(doc.people[0].profile.fullName).toBeTruthy();
     expect(doc.people[0].id).toBeTruthy();
   });
 });
 
-describe('password and session', () => {
-  it('hashes a password and rejects a different one', async () => {
-    const record = await hashPassword('correct horse');
-    expect(record.iterations).toBeGreaterThanOrEqual(210000);
-    expect(record.passwordHash).not.toContain('correct horse');
-    expect(await verifyPassword('correct horse', record)).toBe(true);
-    expect(await verifyPassword('wrong horse', record)).toBe(false);
+describe('GitHub OAuth session', () => {
+  it('rejects a missing or different OAuth state', () => {
+    const state = 'a'.repeat(32);
+    expect(oauthStateMatches(state, state)).toBe(true);
+    expect(oauthStateMatches(state, 'b'.repeat(32))).toBe(false);
+    expect(oauthStateMatches(null, state)).toBe(false);
+    expect(oauthStateMatches('short', 'short')).toBe(false);
   });
 
-  it('encrypts a token and decrypts it only with the same password', async () => {
-    const secret = 'token-de-prueba';
-    const encrypted = await encryptToken('clave-larga', secret);
-    expect(encrypted.ciphertext).not.toContain('token-de-prueba');
-    expect(await decryptToken('clave-larga', encrypted)).toBe(secret);
-    await expect(decryptToken('otra-clave', encrypted)).rejects.toBeTruthy();
+  it('keeps the access token in memory and out of storage', () => {
+    const token = 'gho_solo_en_memoria';
+    localStorage.setItem('resume-admin.oauthState', 'a'.repeat(32));
+    expect(tokenIsOnlyInMemory(token, localStorage, sessionStorage)).toBe(true);
+    sessionStorage.setItem('resume-admin.session', JSON.stringify({ token }));
+    expect(tokenIsOnlyInMemory(token, localStorage, sessionStorage)).toBe(false);
+    sessionStorage.clear();
+    localStorage.setItem('resume-admin.githubToken', token);
+    expect(tokenIsOnlyInMemory(token, localStorage, sessionStorage)).toBe(false);
+    localStorage.clear();
+  });
+
+  it('treats a placeholder Worker URL as not configured', () => {
+    expect(oauthConfigured('', '', true)).toBe(false);
+    expect(oauthConfigured('Iv1.public', 'https://hojadevida-oauth.<subdominio>.workers.dev', true)).toBe(false);
+    expect(oauthConfigured('Iv1.public', 'https://hojadevida-oauth.ejemplo.workers.dev', true)).toBe(true);
+    expect(oauthConfigured('Iv1.public', '', false)).toBe(true);
+    expect(oauthRedirectUri('https://adminproac.github.io/HojaDeVida/')).toBe('https://adminproac.github.io/HojaDeVida/auth/callback');
+    expect(oauthRedirectUri('http://localhost:4200/')).toBe('http://localhost:4200/auth/callback');
+    expect(exchangeEndpoint('https://hojadevida-oauth.ejemplo.workers.dev')).toBe('https://hojadevida-oauth.ejemplo.workers.dev/api/oauth/exchange');
+    expect(exchangeEndpoint('')).toBe('/api/oauth/exchange');
+  });
+
+  it('drops a legacy users array without changing people', () => {
+    const people = [{ id: 'person-001', profile: { fullName: 'JESUS EDGAR DUARTE CACERES' } }];
+    const doc = asDataDocument({
+      meta: { schemaVersion: '3.0.0', defaultLanguage: 'es', supportedLanguages: ['en', 'es'], lastUpdated: '2026-01-01T00:00:00.000Z' },
+      users: [{ username: 'viejo', passwordHash: 'x' }],
+      people,
+    } as unknown as ResumeDocument);
+    expect(doc.users).toBeUndefined();
+    expect(doc.people).toEqual(people);
+    const source = readFileSync(path.resolve('src/app/core/session.service.ts'), 'utf8');
+    expect(source).not.toContain('localStorage.setItem');
+    expect(source).not.toContain("'resume-admin.session'");
+    expect(source.match(/sessionStorage\.setItem/g)).toEqual(['sessionStorage.setItem']);
+    expect(source).toContain('sessionStorage.setItem(OAUTH_STATE_KEY, state)');
   });
 
   it('expires a session after 5 idle minutes and warns 30 seconds before', () => {
