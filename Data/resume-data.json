@@ -8,7 +8,7 @@
       "es"
     ],
     "source": "CV PDF provided by the owner (JESUS EDGAR DUARTE)",
-    "lastUpdated": "2026-11-25T00:43:50.575Z"
+    "lastUpdated": "2026-11-25T00:51:28.244Z"
   },
   "schema": {
     "conventions": {
@@ -2504,6 +2504,177 @@
       "languages": [],
       "certifications": [],
       "additionalInfo": []
+    },
+    {
+      "id": "person-07d05f05",
+      "createdAt": "2026-11-25T00:51:28.244Z",
+      "updatedAt": "2026-11-25T00:51:28.244Z",
+      "profile": {
+        "fullName": "JESUS EDGAR DUARTE",
+        "headline": null,
+        "email": "j.edgar.duarte.c@gmail.com",
+        "phone": null,
+        "location": {
+          "en": "(Languages: B1 English, Spanish)",
+          "es": ""
+        },
+        "website": null,
+        "photoUrl": null
+      },
+      "summary": [
+        {
+          "id": "sum-fb05dbe3",
+          "order": 1,
+          "createdAt": "2026-11-25T00:51:28.243Z",
+          "updatedAt": "2026-11-25T00:51:28.243Z",
+          "text": {
+            "en": "Reliable and detail-oriented professional with strong experience in process control, data handling, quality assurance, and workflow organization. Used to working under pressure, following procedures, meeting deadlines, and maintaining accuracy in daily tasks. Fast learner, team player, and highly responsible. Able to adapt quickly to warehouse environments, logistics operations, inventory handling, packing, receiving, and order fulfillment. CORE SKILLS  Process following and quality control  Inventory management and data accuracy  Organization and attention to detail  Teamwork and communication  Fast learning and adaptability  Time management and productivity  Problem solving  Computer skills and data entry",
+            "es": "Reliable and detail-oriented professional with strong experience in process control, data handling, quality assurance, and workflow organization. Used to working under pressure, following procedures, meeting deadlines, and maintaining accuracy in daily tasks. Fast learner, team player, and highly responsible. Able to adapt quickly to warehouse environments, logistics operations, inventory handling, packing, receiving, and order fulfillment. CORE SKILLS  Process following and quality control  Inventory management and data accuracy  Organization and attention to detail  Teamwork and communication  Fast learning and adaptability  Time management and productivity  Problem solving  Computer skills and data entry"
+          }
+        }
+      ],
+      "experience": [
+        {
+          "id": "exp-7b296b33",
+          "order": 1,
+          "createdAt": "2026-11-25T00:51:28.244Z",
+          "updatedAt": "2026-11-25T00:51:28.244Z",
+          "company": "EUREKA TECHNOLOGY SERVICES",
+          "title": {
+            "en": "Process & Systems Support Specialist",
+            "es": "Process & Systems Support Specialist"
+          },
+          "location": {
+            "en": " Followed and improved operational processes to ensure accuracy and efficiency.",
+            "es": ""
+          },
+          "startDate": "2022-08",
+          "endDate": "2024-08",
+          "isCurrent": false,
+          "dateLabel": null,
+          "highlights": []
+        },
+        {
+          "id": "exp-eebb5502",
+          "order": 2,
+          "createdAt": "2026-11-25T00:51:28.244Z",
+          "updatedAt": "2026-11-25T00:51:28.244Z",
+          "company": " Managed and controlled operational workflows related to authorizations and",
+          "title": {
+            "en": "service requests.",
+            "es": "service requests."
+          },
+          "location": {
+            "en": " Ensured accuracy of records, documentation, and system entries.",
+            "es": ""
+          },
+          "startDate": "2014-08",
+          "endDate": "2022-03",
+          "isCurrent": false,
+          "dateLabel": null,
+          "highlights": []
+        },
+        {
+          "id": "exp-b6aa0cb8",
+          "order": 3,
+          "createdAt": "2026-11-25T00:51:28.244Z",
+          "updatedAt": "2026-11-25T00:51:28.244Z",
+          "company": " Supported billing, inventory, and logistics processes.",
+          "title": {
+            "en": " Worked with shipping documentation and container logistics.",
+            "es": " Worked with shipping documentation and container logistics."
+          },
+          "location": {
+            "en": " Verified information accuracy and process compliance.",
+            "es": ""
+          },
+          "startDate": "2009-04",
+          "endDate": "2014-03",
+          "isCurrent": false,
+          "dateLabel": null,
+          "highlights": []
+        },
+        {
+          "id": "exp-27b754b6",
+          "order": 4,
+          "createdAt": "2026-11-25T00:51:28.244Z",
+          "updatedAt": "2026-11-25T00:51:28.244Z",
+          "company": " Supported auditing and field operations.",
+          "title": {
+            "en": " Supported auditing and field operations.",
+            "es": " Supported auditing and field operations."
+          },
+          "location": {
+            "en": " Managed documentation, reports, and daily operational controls.",
+            "es": ""
+          },
+          "startDate": "2006-03",
+          "endDate": "2009-03",
+          "isCurrent": false,
+          "dateLabel": null,
+          "highlights": []
+        },
+        {
+          "id": "exp-c9da3209",
+          "order": 5,
+          "createdAt": "2026-11-25T00:51:28.244Z",
+          "updatedAt": "2026-11-25T00:51:28.244Z",
+          "company": " Assisted with payroll, inventory, and accounting processes.",
+          "title": {
+            "en": " Supported internal operations and quality control.",
+            "es": " Supported internal operations and quality control."
+          },
+          "location": {
+            "en": " Provided training and operational support to staff.",
+            "es": ""
+          },
+          "startDate": "2004-08",
+          "endDate": "2006-01",
+          "isCurrent": false,
+          "dateLabel": null,
+          "highlights": []
+        }
+      ],
+      "otherExperience": [],
+      "education": [
+        {
+          "id": "edu-7c52b677",
+          "order": 1,
+          "createdAt": "2026-11-25T00:51:28.244Z",
+          "updatedAt": "2026-11-25T00:51:28.244Z",
+          "institution": {
+            "en": "Systems Engineer – Universidad Autónoma de Colombia",
+            "es": "Systems Engineer – Universidad Autónoma de Colombia"
+          },
+          "credential": {
+            "en": "English Studies –",
+            "es": "English Studies –"
+          },
+          "location": {
+            "en": " Centro Colombo Americano (Colombia)",
+            "es": ""
+          },
+          "startDate": null,
+          "endDate": null,
+          "isCurrent": false,
+          "dateLabel": null
+        }
+      ],
+      "skills": [],
+      "languages": [],
+      "certifications": [],
+      "additionalInfo": [
+        {
+          "id": "info-f10f4133",
+          "order": 1,
+          "createdAt": "2026-11-25T00:51:28.244Z",
+          "updatedAt": "2026-11-25T00:51:28.244Z",
+          "text": {
+            "en": " Authorized to work in the U.S.  Social Security  Driver's license with Real ID  Available for full-time and overtime  Flexible schedule  Willing to start immediately",
+            "es": " Authorized to work in the U.S.  Social Security  Driver's license with Real ID  Available for full-time and overtime  Flexible schedule  Willing to start immediately"
+          }
+        }
+      ]
     }
   ]
 }
