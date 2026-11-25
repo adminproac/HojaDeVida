@@ -1387,5 +1387,139 @@
         }
       ]
     }
+  },
+  "users": {
+    "key": "users",
+    "label": {
+      "en": "Users",
+      "es": "Usuarios"
+    },
+    "fields": [
+      {
+        "key": "id",
+        "type": "string",
+        "localized": false,
+        "required": true,
+        "maxLength": 64,
+        "format": null,
+        "ui": "hidden",
+        "label": {
+          "en": "ID",
+          "es": "ID"
+        },
+        "system": true
+      },
+      {
+        "key": "username",
+        "type": "string",
+        "localized": false,
+        "required": true,
+        "maxLength": 80,
+        "format": null,
+        "ui": "input",
+        "label": {
+          "en": "Username",
+          "es": "Usuario"
+        }
+      },
+      {
+        "key": "displayName",
+        "type": "string",
+        "localized": false,
+        "required": true,
+        "maxLength": 120,
+        "format": null,
+        "ui": "input",
+        "label": {
+          "en": "Name",
+          "es": "Nombre"
+        }
+      },
+      {
+        "key": "passwordHash",
+        "type": "string",
+        "localized": false,
+        "required": true,
+        "maxLength": 128,
+        "format": "base64",
+        "ui": "hidden",
+        "label": {
+          "en": "Password hash",
+          "es": "Hash de la contraseña"
+        },
+        "system": true
+      },
+      {
+        "key": "salt",
+        "type": "string",
+        "localized": false,
+        "required": true,
+        "maxLength": 64,
+        "format": "base64",
+        "ui": "hidden",
+        "label": {
+          "en": "Salt",
+          "es": "Sal"
+        },
+        "system": true
+      },
+      {
+        "key": "iterations",
+        "type": "integer",
+        "localized": false,
+        "required": true,
+        "maxLength": null,
+        "format": null,
+        "ui": "number",
+        "label": {
+          "en": "Iterations",
+          "es": "Iteraciones"
+        },
+        "min": 210000,
+        "system": true
+      },
+      {
+        "key": "encryptedToken",
+        "type": "object",
+        "localized": false,
+        "required": false,
+        "maxLength": null,
+        "format": null,
+        "ui": "hidden",
+        "label": {
+          "en": "Encrypted GitHub token",
+          "es": "Token de GitHub cifrado"
+        },
+        "system": true
+      },
+      {
+        "key": "createdAt",
+        "type": "string",
+        "localized": false,
+        "required": true,
+        "maxLength": 40,
+        "format": "date-time",
+        "ui": "hidden",
+        "label": {
+          "en": "Created at",
+          "es": "Fecha de creación"
+        },
+        "system": true
+      },
+      {
+        "key": "updatedAt",
+        "type": "string",
+        "localized": false,
+        "required": true,
+        "maxLength": 40,
+        "format": "date-time",
+        "ui": "hidden",
+        "label": {
+          "en": "Updated at",
+          "es": "Fecha de actualización"
+        },
+        "system": true
+      }
+    ]
   }
 }

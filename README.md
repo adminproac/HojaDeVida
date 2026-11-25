@@ -168,6 +168,17 @@ También puede usar `Terminal > Ejecutar tarea…` → **npm: serve (API + Angul
 - Las reglas de cada campo (`type`, `required`, `maxLength`, `format`, etiquetas EN/ES) están en `src/app/core/resume-schema.json`. La página **Esquema de datos** las muestra. Los formularios y la API validan con esas reglas.
 - Si abre un archivo antiguo que todavía trae `schema`, la aplicación lo ignora y lo quita en el siguiente guardado. Las personas no se modifican.
 
+## Inicio de sesión
+
+Antes de las demás pantallas la aplicación pide usuario y contraseña. El repositorio y el JSON son **públicos**: el inicio de sesión controla quién usa la aplicación para editar; no oculta los datos. Cualquiera puede leer `Data/resume-data.json`.
+
+- No hay una contraseña inicial en el repositorio. Si `users` está vacío, la primera pantalla crea el administrador (usuario, nombre y contraseña). La contraseña se guarda como hash **PBKDF2-SHA256** (210000 iteraciones y una sal aleatoria), nunca en texto plano.
+- El token de GitHub se cifra con **AES-GCM**. La clave sale de la contraseña del usuario (otra sal, distinta de la de la contraseña) y el resultado queda en `encryptedToken`. Al entrar, se descifra solo en la memoria de esa pestaña. No se escribe en `localStorage` ni en el código.
+- Si este navegador todavía tenía un token guardado a la antigua, la aplicación ofrece cifrarlo en el usuario y borrarlo del navegador.
+- Si no usa la página durante **5 minutos**, la sesión se cierra, el token descifrado se borra y verá «Sesión cerrada por inactividad». Un aviso aparece 30 segundos antes. Mover el mouse, escribir, hacer clic o cambiar de página renueva el plazo.
+- En su equipo (`npm start`) la API también comprueba la contraseña. En GitHub Pages hace falta ese token cifrado para guardar cambios.
+- En **Usuarios** se pueden crear cuentas, cambiar la contraseña y eliminarlas. Siempre debe quedar al menos una.
+
 ## 6. Copias de seguridad
 
 - Desde la app: menú **Respaldar JSON** (crea `Data\backups\resume-data-AAAAMMDD-HHMMSS.json`).

@@ -10,6 +10,7 @@ const fs = require('node:fs');
 const express = require('express');
 const store = require('./store');
 const { validate, newId, ValidationError } = require('./validate');
+const passwords = require('./password-crypto');
 const SCHEMA = require('../src/app/core/resume-schema.json');
 
 const PORT = Number(process.env.PORT) || 3000;
@@ -53,8 +54,116 @@ const PREFIX = {
 const h = (fn) => (req, res, next) => Promise.resolve(fn(req, res)).catch(next);
 
 const api = express.Router();
+const sessions = new Map();
+const SESSION_MS = 5 * 60 * 1000;
+
+function publicUser(user) {
+  return { id: user.id, username: user.username, displayName: user.displayName };
+}
+
+function createSession(user) {
+  const token = passwordsBytes();
+  sessions.set(token, { id: user.id, username: user.username, displayName: user.displayName, expiresAt: Date.now() + SESSION_MS });
+  return token;
+}
+
+function passwordsBytes() {
+  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(32));
+  let binary = '';
+  for (const b of bytes) binary += String.fromCharCode(b);
+  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+}
+
+function currentSession(req) {
+  const header = req.get('authorization') || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+  const session = token ? sessions.get(token) : null;
+  if (!session) return null;
+  if (session.expiresAt <= Date.now()) {
+    sessions.delete(token);
+    return null;
+  }
+  return session;
+}
+
+function assertStoredUser(user) {
+  if (!user || typeof user !== 'object') throw httpError(400, 'User record is required');
+  if (user.password != null || user.token != null || user.pat != null) throw httpError(400, 'Refusing a plaintext password or token');
+  if (!String(user.username || '').trim() || !String(user.displayName || '').trim() || !user.passwordHash || !user.salt) {
+    throw httpError(400, 'User record is incomplete');
+  }
+  if (Number(user.iterations) < passwords.ITERATIONS) throw httpError(400, 'Password hash is too weak');
+}
+
+api.use((req, res, next) => {
+  if (req.method === 'GET' || req.method === 'HEAD') return next();
+  if (req.path === '/login' || req.path === '/session/touch' || req.path === '/users/bootstrap') return next();
+  const session = currentSession(req);
+  if (!session) return res.status(401).json({ message: '401 — Sesión requerida' });
+  session.expiresAt = Date.now() + SESSION_MS;
+  req.sessionUser = session;
+  next();
+});
 
 api.get('/health', (req, res) => res.json({ ok: true, dataFile: store.DATA_FILE, exists: store.exists() }));
+
+api.post('/login', h(async (req, res) => {
+  const username = String(req.body?.username || '').trim().toLowerCase();
+  const password = String(req.body?.password || '');
+  const doc = await store.read();
+  const user = (doc.users || []).find((item) => item.username.toLowerCase() === username);
+  if (!user || !(await passwords.verifyPassword(password, user))) return res.status(401).json({ message: '401 — Usuario o contraseña incorrectos' });
+  res.json({ token: createSession(user), user: publicUser(user) });
+}));
+
+api.post('/session/touch', (req, res) => {
+  const session = currentSession(req);
+  if (!session) return res.status(401).json({ message: '401 — Sesión requerida' });
+  session.expiresAt = Date.now() + SESSION_MS;
+  res.json({ ok: true });
+});
+
+api.post('/users/bootstrap', h(async (req, res) => {
+  const created = await store.update((doc) => {
+    if ((doc.users || []).length) throw httpError(409, 'Users already exist');
+    const user = req.body?.user;
+    assertStoredUser(user);
+    const record = { ...user, username: String(user.username).trim(), displayName: String(user.displayName).trim(), encryptedToken: user.encryptedToken || null };
+    doc.users = [record];
+    return record;
+  });
+  res.status(201).json({ token: createSession(created), user: publicUser(created) });
+}));
+
+api.put('/users/:id', h(async (req, res) => {
+  const saved = await store.update((doc) => {
+    const user = req.body?.user;
+    assertStoredUser(user);
+    if (user.id !== req.params.id) throw httpError(400, 'User id mismatch');
+    const users = doc.users || [];
+    const username = String(user.username).trim();
+    if (users.some((item) => item.username.toLowerCase() === username.toLowerCase() && item.id !== user.id)) {
+      throw httpError(409, `User '${username}' already exists`);
+    }
+    const index = users.findIndex((item) => item.id === user.id);
+    const record = { ...user, username, displayName: String(user.displayName).trim(), encryptedToken: user.encryptedToken || null };
+    if (index < 0) users.push(record);
+    else users[index] = record;
+    doc.users = users;
+    return record;
+  });
+  res.json(publicUser(saved));
+}));
+
+api.delete('/users/:id', h(async (req, res) => {
+  await store.update((doc) => {
+    const users = doc.users || [];
+    if (users.length <= 1) throw httpError(400, 'At least one user is required');
+    if (!users.some((item) => item.id === req.params.id)) throw httpError(404, `User '${req.params.id}' not found`);
+    doc.users = users.filter((item) => item.id !== req.params.id);
+  });
+  res.status(204).end();
+}));
 
 api.get('/data', h(async (req, res) => res.json(await store.read())));
 

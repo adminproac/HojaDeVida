@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { errorText } from '../core/data-error';
 import { GithubService } from '../core/github.service';
+import { SessionService } from '../core/session.service';
 import { I18nService } from '../core/i18n.service';
 import { TPipe } from './pipes';
 
@@ -18,7 +19,7 @@ import { TPipe } from './pipes';
         </span>
       </div>
       <div class="card-body">
-        <p class="text-gray-600 small mb-3">{{ 'githubHelp' | t }}</p>
+        <p class="text-gray-600 small mb-3">{{ 'githubHelpEncrypted' | t }}</p>
         <label class="d-block" for="github-token">{{ 'githubToken' | t }}</label>
         <input id="github-token" type="password" class="form-control mb-3" autocomplete="off" spellcheck="false"
           [attr.placeholder]="github.hasToken() ? ('githubTokenStored' | t) : 'github_pat_…'"
@@ -51,6 +52,7 @@ import { TPipe } from './pipes';
 })
 export class GithubConnectComponent {
   protected github = inject(GithubService);
+  private session = inject(SessionService);
   private i18n = inject(I18nService);
   protected readonly draft = signal('');
   protected readonly busy = signal(false);
@@ -67,7 +69,10 @@ export class GithubConnectComponent {
       this.github.testOk.set(false);
       return;
     }
-    if (value) this.github.setToken(value);
+    if (value) {
+      try { await this.session.storeToken(value); }
+      catch { this.github.connectionError.set(this.i18n.t('loginRelogin')); return; }
+    }
     this.draft.set('');
     await this.run(() => this.github.testConnection());
   }

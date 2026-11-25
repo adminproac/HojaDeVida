@@ -1,5 +1,6 @@
 import { DataError, ValidationError } from './data-error';
-import { ApiFieldError, FieldSchema, Person, Profile, ResumeDocument, SectionItem } from './models';
+import { ApiFieldError, FieldSchema, Person, Profile, ResumeDocument, ResumeUser, SectionItem } from './models';
+import { PBKDF2_ITERATIONS } from './password-crypto';
 import { RESUME_SCHEMA } from './resume-schema';
 
 /**
@@ -184,6 +185,38 @@ export function updateProfile(doc: ResumeDocument, personId: string, profile: Pa
   person.profile = validate(RESUME_SCHEMA.profile.fields, profile ?? {}, 'profile') as Person['profile'];
   person.updatedAt = now();
   return person;
+}
+
+function assertUserRecord(user: ResumeUser) {
+  const forbidden = user as ResumeUser & { password?: unknown; token?: unknown; pat?: unknown };
+  if (forbidden.password != null || forbidden.token != null || forbidden.pat != null) {
+    throw new DataError(400, '400 — Refusing a plaintext password or token');
+  }
+  if (!user.username?.trim() || !user.displayName?.trim() || !user.passwordHash || !user.salt) {
+    throw new DataError(400, '400 — User record is incomplete');
+  }
+  if (user.iterations < PBKDF2_ITERATIONS) throw new DataError(400, '400 — Password hash is too weak');
+}
+
+export function upsertUser(doc: ResumeDocument, user: ResumeUser): ResumeUser {
+  assertUserRecord(user);
+  const username = user.username.trim();
+  const users = doc.users || [];
+  const duplicate = users.find((item) => item.username.toLowerCase() === username.toLowerCase() && item.id !== user.id);
+  if (duplicate) throw new DataError(409, `409 — User '${username}' already exists`);
+  const next = { ...user, username, displayName: user.displayName.trim() };
+  const index = users.findIndex((item) => item.id === user.id);
+  if (index >= 0) users[index] = next;
+  else users.push(next);
+  doc.users = users;
+  return next;
+}
+
+export function deleteUser(doc: ResumeDocument, userId: string): void {
+  const users = doc.users || [];
+  if (users.length <= 1) throw new DataError(400, '400 — At least one user is required');
+  if (!users.some((item) => item.id === userId)) throw new DataError(404, `404 — User '${userId}' not found`);
+  doc.users = users.filter((item) => item.id !== userId);
 }
 
 export function deletePerson(doc: ResumeDocument, personId: string): void {

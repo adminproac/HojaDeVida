@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Person, Profile, ResumeDocument, SectionItem } from './models';
+import { Person, Profile, ResumeDocument, ResumeUser, SectionItem } from './models';
 
 /** Calls the Node/Express API (proxied from /api to http://localhost:3000 in development). */
 @Injectable({ providedIn: 'root' })
@@ -11,6 +11,16 @@ export class ApiService {
 
   getData() { return firstValueFrom(this.http.get<ResumeDocument>(`${this.base}/data`)); }
   health() { return firstValueFrom(this.http.get<{ ok: boolean; dataFile: string }>(`${this.base}/health`)); }
+
+  login(username: string, password: string) {
+    return firstValueFrom(this.http.post<{ token: string; user: { id: string; username: string; displayName: string } }>(`${this.base}/login`, { username, password }));
+  }
+  touchSession() { return firstValueFrom(this.http.post<{ ok: boolean }>(`${this.base}/session/touch`, {})); }
+  bootstrapUser(user: ResumeUser) {
+    return firstValueFrom(this.http.post<{ token: string; user: { id: string; username: string; displayName: string } }>(`${this.base}/users/bootstrap`, { user }));
+  }
+  saveUser(user: ResumeUser) { return firstValueFrom(this.http.put<ResumeUser>(`${this.base}/users/${user.id}`, { user })); }
+  deleteUser(userId: string) { return firstValueFrom(this.http.delete<void>(`${this.base}/users/${userId}`)); }
 
   createPerson(profile: Partial<Profile>) {
     return firstValueFrom(this.http.post<Person>(`${this.base}/people`, { profile }));

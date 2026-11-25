@@ -1,4 +1,10 @@
 <!-- Layout: SB Admin 2 (Start Bootstrap, MIT). Sidebar toggle/collapse reimplemented in Angular (no jQuery). -->
+@if (session.gate() === 'loading') {
+  <div class="login-page"><div class="spinner-border text-light"></div></div>
+} @else if (session.gate() === 'setup' || session.gate() === 'login') {
+  <app-login [mode]="session.gate() === 'setup' ? 'setup' : 'login'" />
+  <app-toasts />
+} @else {
 <div id="wrapper">
   <!-- Sidebar -->
   <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar" [class.toggled]="toggled()">
@@ -42,6 +48,9 @@
 
     <li class="nav-item" routerLinkActive="active">
       <a class="nav-link" routerLink="/import"><i class="fas fa-fw fa-file-pdf"></i><span>{{ 'pdfImport' | t }}</span></a>
+    </li>
+    <li class="nav-item" routerLinkActive="active">
+      <a class="nav-link" routerLink="/users"><i class="fas fa-fw fa-user-shield"></i><span>{{ 'users' | t }}</span></a>
     </li>
     <li class="nav-item" routerLinkActive="active">
       <a class="nav-link" routerLink="/schema"><i class="fas fa-fw fa-sitemap"></i><span>{{ 'schema' | t }}</span></a>
@@ -147,3 +156,28 @@
 
 <app-confirm-dialog />
 <app-toasts />
+@if (session.needsToken() || session.offerLegacyToken()) {
+  <div class="modal-backdrop show"></div>
+  <div class="modal d-block" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">{{ 'loginTokenTitle' | t }}</h5></div>
+        <div class="modal-body">
+          <p>{{ (session.offerLegacyToken() ? 'loginMigrate' : 'loginTokenHelp') | t }}</p>
+          @if (!session.offerLegacyToken()) {
+            <input type="password" class="form-control" autocomplete="off" spellcheck="false" [value]="tokenDraft()" (input)="tokenDraft.set($any($event.target).value)" />
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" (click)="session.dismissTokenPrompt()">{{ 'cancel' | t }}</button>
+          @if (session.offerLegacyToken()) {
+            <button type="button" class="btn btn-primary" (click)="acceptLegacy()">{{ 'loginMigrateYes' | t }}</button>
+          } @else {
+            <button type="button" class="btn btn-primary" (click)="saveToken()">{{ 'githubSaveToken' | t }}</button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}
+}

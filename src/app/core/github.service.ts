@@ -8,6 +8,19 @@ const REPO = 'HojaDeVida';
 const BRANCH = 'main';
 const DATA_PATH = 'Data/resume-data.json';
 const TOKEN_KEY = 'resume-admin.githubToken';
+
+export function readLegacyToken(): string | null {
+  try {
+    const value = localStorage.getItem(TOKEN_KEY);
+    return value && value.trim() ? value.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearLegacyToken() {
+  try { localStorage.removeItem(TOKEN_KEY); } catch { /* private mode */ }
+}
 const API = 'https://api.github.com';
 const RAW = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${DATA_PATH}`;
 
@@ -17,7 +30,7 @@ const RAW = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${DATA
  */
 @Injectable({ providedIn: 'root' })
 export class GithubService {
-  readonly token = signal<string | null>(readStoredToken());
+  readonly token = signal<string | null>(null);
   readonly hasToken = computed(() => !!this.token());
   readonly connected = signal(false);
   readonly checking = signal(false);
@@ -33,21 +46,26 @@ export class GithubService {
   /** Bumped after a commit so an in-flight "last commit" lookup cannot overwrite the new link. */
   private commitEpoch = 0;
 
-  setToken(value: string) {
-    const token = value.trim();
-    if (!token) return;
-    localStorage.setItem(TOKEN_KEY, token);
+  /** Decrypted token for this tab only. It is never written to localStorage. */
+  useMemoryToken(value: string | null) {
+    const token = value?.trim() || null;
     this.token.set(token);
+    if (!token) {
+      this.connected.set(false);
+      this.testOk.set(false);
+      this.pushAccess.set(null);
+    }
+  }
+
+  setToken(value: string) {
+    this.useMemoryToken(value);
     this.connected.set(false);
     this.testOk.set(false);
   }
 
   clearToken() {
-    localStorage.removeItem(TOKEN_KEY);
-    this.token.set(null);
-    this.connected.set(false);
-    this.testOk.set(false);
-    this.pushAccess.set(null);
+    clearLegacyToken();
+    this.useMemoryToken(null);
     this.connectionError.set(null);
   }
 
@@ -189,15 +207,6 @@ export class GithubService {
     }
     const text = decodeBase64(body.content).replace(/^\uFEFF/, '');
     return { sha: body.sha, doc: asDataDocument(JSON.parse(text) as ResumeDocument) };
-  }
-}
-
-function readStoredToken(): string | null {
-  try {
-    const value = localStorage.getItem(TOKEN_KEY);
-    return value && value.trim() ? value.trim() : null;
-  } catch {
-    return null;
   }
 }
 

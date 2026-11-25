@@ -1,8 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ApiService } from './api.service';
-import { createItem, createPerson, deleteItem, deletePerson, importPerson, moveItem, updateItem, updateProfile } from './document-mutations';
+import { createItem, createPerson, deleteItem, deletePerson, deleteUser, importPerson, moveItem, updateItem, updateProfile, upsertUser } from './document-mutations';
 import { GithubService } from './github.service';
-import { Profile, ResumeDocument, SectionItem } from './models';
+import { Profile, ResumeDocument, ResumeUser, SectionItem } from './models';
 
 export type StorageMode = 'detecting' | 'api' | 'github';
 
@@ -33,6 +33,32 @@ export class DataService {
 
   async getData(): Promise<ResumeDocument> {
     return (await this.ensureMode()) === 'api' ? this.api.getData() : this.github.getData();
+  }
+
+  async login(username: string, password: string) {
+    await this.ensureMode();
+    return this.api.login(username, password);
+  }
+
+  async touchSession() {
+    if ((await this.ensureMode()) !== 'api') return;
+    await this.api.touchSession();
+  }
+
+  async bootstrapUser(user: ResumeUser) {
+    if ((await this.ensureMode()) === 'api') return this.api.bootstrapUser(user);
+    await this.github.update((doc) => upsertUser(doc, user), 'Crear el primer usuario en Data/resume-data.json');
+    return { token: '', user: { id: user.id, username: user.username, displayName: user.displayName } };
+  }
+
+  async saveUser(user: ResumeUser) {
+    if ((await this.ensureMode()) === 'api') return this.api.saveUser(user);
+    return this.github.update((doc) => upsertUser(doc, user), 'Actualizar usuario en Data/resume-data.json');
+  }
+
+  async deleteUser(userId: string) {
+    if ((await this.ensureMode()) === 'api') return this.api.deleteUser(userId);
+    return this.github.update((doc) => deleteUser(doc, userId), 'Eliminar usuario en Data/resume-data.json');
   }
 
   async importPerson(body: Record<string, unknown>) {

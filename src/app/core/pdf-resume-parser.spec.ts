@@ -4,7 +4,9 @@ import { pathToFileURL } from 'node:url';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 import { describe, expect, it } from 'vitest';
 import { DataSchema } from './models';
+import { decryptToken, encryptToken, hashPassword, verifyPassword } from './password-crypto';
 import { parseResumeText } from './pdf-resume-parser';
+import { SESSION_TIMEOUT_MS, SESSION_WARN_MS, sessionClock } from './session-clock';
 import { extractPdfText } from './pdf-text';
 
 const schema = JSON.parse(readFileSync(path.resolve('src/app/core/resume-schema.json'), 'utf8')) as DataSchema;
@@ -56,9 +58,36 @@ describe('resume data file', () => {
     expect(doc.schema).toBeUndefined();
     expect(doc.meta.schemaVersion).toBe('3.0.0');
     expect(doc.meta.defaultLanguage).toBe('es');
+    expect(doc.users).toEqual([]);
     expect(doc.people.length).toBeGreaterThan(0);
     expect(doc.people[0].profile.fullName).toBeTruthy();
     expect(doc.people[0].id).toBeTruthy();
+  });
+});
+
+describe('password and session', () => {
+  it('hashes a password and rejects a different one', async () => {
+    const record = await hashPassword('correct horse');
+    expect(record.iterations).toBeGreaterThanOrEqual(210000);
+    expect(record.passwordHash).not.toContain('correct horse');
+    expect(await verifyPassword('correct horse', record)).toBe(true);
+    expect(await verifyPassword('wrong horse', record)).toBe(false);
+  });
+
+  it('encrypts a token and decrypts it only with the same password', async () => {
+    const secret = 'token-de-prueba';
+    const encrypted = await encryptToken('clave-larga', secret);
+    expect(encrypted.ciphertext).not.toContain('token-de-prueba');
+    expect(await decryptToken('clave-larga', encrypted)).toBe(secret);
+    await expect(decryptToken('otra-clave', encrypted)).rejects.toBeTruthy();
+  });
+
+  it('expires a session after 5 idle minutes and warns 30 seconds before', () => {
+    const start = 1_000_000;
+    expect(sessionClock(start, start + 1000)).toBe('active');
+    expect(sessionClock(start, start + SESSION_TIMEOUT_MS - SESSION_WARN_MS)).toBe('warning');
+    expect(sessionClock(start, start + SESSION_TIMEOUT_MS - 1)).toBe('warning');
+    expect(sessionClock(start, start + SESSION_TIMEOUT_MS)).toBe('expired');
   });
 });
 
