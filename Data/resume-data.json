@@ -8,7 +8,7 @@
       "es"
     ],
     "source": "CV PDF provided by the owner (JESUS EDGAR DUARTE)",
-    "lastUpdated": "2026-11-24T22:28:06.066Z"
+    "lastUpdated": "2026-11-25T00:03:24.444Z"
   },
   "schema": {
     "conventions": {
@@ -2194,6 +2194,34 @@
         },
         "website": null,
         "photoUrl": null
+      },
+      "summary": [],
+      "experience": [],
+      "otherExperience": [],
+      "education": [],
+      "skills": [],
+      "languages": [],
+      "certifications": [],
+      "additionalInfo": []
+    },
+    {
+      "id": "person-a3d2ef6f",
+      "createdAt": "2026-11-25T00:03:24.444Z",
+      "updatedAt": "2026-11-25T00:03:24.444Z",
+      "profile": {
+        "fullName": "Elon Muskrat",
+        "headline": {
+          "en": "Boss",
+          "es": "Boss"
+        },
+        "email": "elonmuskrat@notreal.com",
+        "phone": null,
+        "location": {
+          "en": "Internet",
+          "es": "Internet"
+        },
+        "website": "https://x.com",
+        "photoUrl": "https://grok.com/imagine/post/668a170a-e4a4-44ab-96c3-36437642772a"
       },
       "summary": [],
       "experience": [],
