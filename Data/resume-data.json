@@ -8,9 +8,25 @@
       "es"
     ],
     "source": "CV PDF provided by the owner (JESUS EDGAR DUARTE)",
-    "lastUpdated": "2026-11-25T01:06:07.998Z"
+    "lastUpdated": "2026-11-25T02:02:38.012Z"
   },
-  "users": [],
+  "users": [
+    {
+      "id": "user-e5e5db64",
+      "username": "jeduartec",
+      "displayName": "Edgar Duarte",
+      "passwordHash": "cVUVHBuxtnylusQx0ybcQPsYkIF7/DtnjX2/fDtvCEg=",
+      "salt": "zQ9/cPjXJrtLJAMO6Tvo7Q==",
+      "iterations": 210000,
+      "encryptedToken": {
+        "salt": "VZSK0NXwkYxzd2B9WwCjKw==",
+        "iv": "skdmF8AKD6+6emq4",
+        "ciphertext": "t6jp5ulDf+Sqv7UGUbGHO1tpyTEdpuWgEBPHv6jw2wiqGmHaTOhkXBD+8IK4i9Rdvz6clOn6D70l6qUWcJRd5qvHAyKNLotDbcqaMyVHoJOf3zF75RT2gaLd6cuBcu5KIy+rzTfML8FoLi4yvw=="
+      },
+      "createdAt": "2026-11-25T02:02:37.451Z",
+      "updatedAt": "2026-11-25T02:02:37.451Z"
+    }
+  ],
   "people": [
     {
       "id": "person-001",
