@@ -90,7 +90,7 @@ const DICT = {
   format: { en: 'Format', es: 'Formato' },
   yes: { en: 'Yes', es: 'Sí' },
   no: { en: 'No', es: 'No' },
-  schemaIntro: { en: 'Fields, attributes and sizes of each section of resume-data.json. The forms validate with these rules and so does the API.', es: 'Campos, atributos y tamaños de cada sección de resume-data.json. Los formularios y la API validan con estas reglas.' },
+  schemaIntro: { en: 'Fields, attributes and sizes of each section. They live in the application, not in the data file. The forms and the API validate with these rules.', es: 'Campos, atributos y tamaños de cada sección. Están en la aplicación, no en el archivo de datos. Los formularios y la API validan con estas reglas.' },
   sections: { en: 'Sections', es: 'Secciones' },
   records: { en: 'records', es: 'registros' },
   contact: { en: 'Contact', es: 'Contacto' },

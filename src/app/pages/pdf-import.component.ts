@@ -152,7 +152,8 @@ export class PdfImportComponent {
         this.profileForm.set(null);
         return;
       }
-      this.showParsed(parseResumeText(text, doc.schema), doc.schema);
+      const schema = this.store.schema();
+      this.showParsed(parseResumeText(text, schema), schema);
     } catch (e) {
       this.profileForm.set(null);
       this.error.set(`${this.i18n.t('pdfReadError')} ${errorText(e)}`);

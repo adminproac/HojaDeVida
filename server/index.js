@@ -10,6 +10,7 @@ const fs = require('node:fs');
 const express = require('express');
 const store = require('./store');
 const { validate, newId, ValidationError } = require('./validate');
+const SCHEMA = require('../src/app/core/resume-schema.json');
 
 const PORT = Number(process.env.PORT) || 3000;
 const app = express();
@@ -31,15 +32,15 @@ function findPerson(doc, id) {
   return person;
 }
 
-function sectionSchema(doc, key) {
-  const s = doc.schema?.sections?.[key];
+function sectionSchema(_doc, key) {
+  const s = SCHEMA.sections?.[key];
   if (!s) throw httpError(404, `Section '${key}' does not exist`);
   return s;
 }
 
-function emptySections(doc) {
+function emptySections(_doc) {
   const out = {};
-  for (const key of Object.keys(doc.schema.sections)) out[key] = [];
+  for (const key of Object.keys(SCHEMA.sections)) out[key] = [];
   return out;
 }
 
@@ -57,7 +58,7 @@ api.get('/health', (req, res) => res.json({ ok: true, dataFile: store.DATA_FILE,
 
 api.get('/data', h(async (req, res) => res.json(await store.read())));
 
-api.get('/schema', h(async (req, res) => res.json((await store.read()).schema)));
+api.get('/schema', (req, res) => res.json(SCHEMA));
 
 // ---------- People ----------
 api.get('/people', h(async (req, res) => {
@@ -72,7 +73,7 @@ api.get('/people/:id', h(async (req, res) => res.json(findPerson(await store.rea
 
 api.post('/people', h(async (req, res) => {
   const created = await store.update((doc) => {
-    const profile = validate(doc.schema.profile.fields, req.body?.profile ?? req.body, 'profile');
+    const profile = validate(SCHEMA.profile.fields, req.body?.profile ?? req.body, 'profile');
     const person = { id: newId('person'), createdAt: now(), updatedAt: now(), profile, ...emptySections(doc) };
     doc.people = doc.people || [];
     doc.people.push(person);
@@ -84,7 +85,7 @@ api.post('/people', h(async (req, res) => {
 api.put('/people/:id/profile', h(async (req, res) => {
   const person = await store.update((doc) => {
     const p = findPerson(doc, req.params.id);
-    p.profile = validate(doc.schema.profile.fields, req.body?.profile ?? req.body, 'profile');
+    p.profile = validate(SCHEMA.profile.fields, req.body?.profile ?? req.body, 'profile');
     p.updatedAt = now();
     return p;
   });
@@ -102,9 +103,9 @@ api.delete('/people/:id', h(async (req, res) => {
 api.post('/people/import', h(async (req, res) => {
   const replacing = typeof req.body?.replaceId === 'string' && req.body.replaceId;
   const person = await store.update((doc) => {
-    const profile = validate(doc.schema.profile.fields, req.body?.profile ?? {}, 'profile');
+    const profile = validate(SCHEMA.profile.fields, req.body?.profile ?? {}, 'profile');
     const sections = {};
-    for (const key of Object.keys(doc.schema.sections || {})) {
+    for (const key of Object.keys(SCHEMA.sections)) {
       const raw = Array.isArray(req.body?.[key]) ? req.body[key] : [];
       const schema = sectionSchema(doc, key);
       sections[key] = raw.map((item, index) => {

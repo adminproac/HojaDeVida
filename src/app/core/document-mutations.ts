@@ -1,5 +1,6 @@
 import { DataError, ValidationError } from './data-error';
 import { ApiFieldError, FieldSchema, Person, Profile, ResumeDocument, SectionItem } from './models';
+import { RESUME_SCHEMA } from './resume-schema';
 
 /**
  * Same rules as server/validate.js and the same writes as server/index.js.
@@ -116,15 +117,15 @@ function findPerson(doc: ResumeDocument, id: string): Person {
   return person;
 }
 
-function sectionSchema(doc: ResumeDocument, key: string) {
-  const schema = doc.schema?.sections?.[key];
+function sectionSchema(_doc: ResumeDocument, key: string) {
+  const schema = RESUME_SCHEMA.sections[key];
   if (!schema) throw new DataError(404, `404 — Section '${key}' does not exist`);
   return schema;
 }
 
-function emptySections(doc: ResumeDocument) {
+function emptySections(_doc: ResumeDocument) {
   const out: Record<string, SectionItem[]> = {};
-  for (const key of Object.keys(doc.schema.sections)) out[key] = [];
+  for (const key of Object.keys(RESUME_SCHEMA.sections)) out[key] = [];
   return out;
 }
 
@@ -144,9 +145,9 @@ function listOf(person: Person, key: string): SectionItem[] {
 
 /** Insert a full person, or replace one, validating every section with the schema. */
 export function importPerson(doc: ResumeDocument, body: Record<string, unknown>): Person {
-  const profile = validate(doc.schema.profile.fields, body['profile'] ?? {}, 'profile') as Person['profile'];
+  const profile = validate(RESUME_SCHEMA.profile.fields, body['profile'] ?? {}, 'profile') as Person['profile'];
   const sections: Record<string, SectionItem[]> = {};
-  for (const key of Object.keys(doc.schema.sections || {})) {
+  for (const key of Object.keys(RESUME_SCHEMA.sections)) {
     const raw = Array.isArray(body[key]) ? body[key] as Record<string, unknown>[] : [];
     const schema = sectionSchema(doc, key);
     sections[key] = raw.map((item, index) => {
@@ -171,7 +172,7 @@ export function importPerson(doc: ResumeDocument, body: Record<string, unknown>)
 }
 
 export function createPerson(doc: ResumeDocument, profile: Partial<Profile>): Person {
-  const normalized = validate(doc.schema.profile.fields, profile ?? {}, 'profile') as Person['profile'];
+  const normalized = validate(RESUME_SCHEMA.profile.fields, profile ?? {}, 'profile') as Person['profile'];
   const person: Person = { id: newId('person'), createdAt: now(), updatedAt: now(), profile: normalized, ...emptySections(doc) };
   doc.people = doc.people || [];
   doc.people.push(person);
@@ -180,7 +181,7 @@ export function createPerson(doc: ResumeDocument, profile: Partial<Profile>): Pe
 
 export function updateProfile(doc: ResumeDocument, personId: string, profile: Partial<Profile>): Person {
   const person = findPerson(doc, personId);
-  person.profile = validate(doc.schema.profile.fields, profile ?? {}, 'profile') as Person['profile'];
+  person.profile = validate(RESUME_SCHEMA.profile.fields, profile ?? {}, 'profile') as Person['profile'];
   person.updatedAt = now();
   return person;
 }

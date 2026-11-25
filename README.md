@@ -5,7 +5,7 @@ Permite registrar **varias personas**, cada una con su hoja de vida completa.
 
 - **Front-end:** Angular 22 (componentes *standalone*, *signals*, formularios reactivos) con la plantilla gratuita **SB Admin 2** de Start Bootstrap (Bootstrap 4.6, licencia MIT).
 - **API:** Node.js + Express 5 (carpeta `server/`), que lee y escribe el archivo `Data/resume-data.json` con escrituras atómicas.
-- **Datos:** `Data/resume-data.json` (incluye el bloque `schema` con nombres de campos, tipos, tamaños máximos, formatos y etiquetas EN/ES).
+- **Datos:** `Data/resume-data.json` guarda solo los datos (`meta` y `people`). Los tipos, tamaños y etiquetas están en la aplicación (`src/app/core/resume-schema.json`).
 
 > English version below ⬇
 
@@ -145,7 +145,6 @@ También puede usar `Terminal > Ejecutar tarea…` → **npm: serve (API + Angul
 ```text
 {
   "meta":   { schemaVersion, defaultLanguage, supportedLanguages, lastUpdated, … },
-  "schema": { conventions, person, profile, sections: { summary, experience, … } },
   "people": [
     {
       "id", "createdAt", "updatedAt",
@@ -165,7 +164,9 @@ También puede usar `Terminal > Ejecutar tarea…` → **npm: serve (API + Angul
 
 - Los textos legibles se guardan como `{ "en": "...", "es": "..." }`.
 - Fechas: `AAAA-MM` (p. ej. `2022-08`). Marcas de tiempo: ISO 8601.
-- El bloque `schema` documenta cada campo: `key`, `type`, `required`, `maxLength` (tamaño), `format`, `pattern`, `localized` y `label {en, es}`. La página **Esquema de datos** lo muestra en tablas. Los formularios y la API validan con estas mismas reglas.
+- El archivo **no** incluye tipos ni tamaños. Solo `meta` (versión, idioma) y `people` (los datos, incluidos `id`, `createdAt`, `updatedAt` y `order`).
+- Las reglas de cada campo (`type`, `required`, `maxLength`, `format`, etiquetas EN/ES) están en `src/app/core/resume-schema.json`. La página **Esquema de datos** las muestra. Los formularios y la API validan con esas reglas.
+- Si abre un archivo antiguo que todavía trae `schema`, la aplicación lo ignora y lo quita en el siguiente guardado. Las personas no se modifican.
 
 ## 6. Copias de seguridad
 
@@ -196,12 +197,12 @@ El diseño usa **[SB Admin 2](https://startbootstrap.com/theme/sb-admin-2) v4.1.
 
 ```text
 Resume/
-├─ Data/resume-data.json      ← datos (y Data/backups/ para copias)
+├─ Data/resume-data.json      ← solo datos: meta + people (y Data/backups/ para copias)
 ├─ server/                    ← API Node/Express (index.js, store.js, validate.js)
 ├─ scripts/backup.js          ← npm run backup
 ├─ src/vendor/sb-admin-2/      ← CSS de SB Admin 2 + LICENSE (MIT)
 ├─ src/app/
-│  ├─ core/                   ← modelos, servicios (API, store, idioma), validación de formularios
+│  ├─ core/                   ← modelos, resume-schema.json, servicios (API, store, idioma)
 │  ├─ shared/                 ← formulario dinámico, campos, diálogo de confirmación, notificaciones
 │  └─ pages/                  ← tablero, personas, hoja de vida, formularios, esquema
 ├─ proxy.conf.json            ← /api → http://localhost:3000
@@ -224,7 +225,7 @@ Resume/
 
 - **Front-end:** Angular 22 (standalone components, signals, reactive forms) with the free **SB Admin 2** template by Start Bootstrap (Bootstrap 4.6, MIT).
 - **API:** Node.js + Express 5 in `server/`, reading/writing `Data/resume-data.json` with atomic writes (temp file + rename).
-- **Data:** `Data/resume-data.json`, including a `schema` block that documents every field (type, required, maxLength, format, bilingual labels).
+- **Data:** `Data/resume-data.json` stores only `meta` and `people`. Field types, sizes and labels live in `src/app/core/resume-schema.json`.
 
 ### Requirements
 - **Node.js 24.15+ LTS** (22.22.3+ or 26.x also work — Angular 22 requires `^22.22.3 || ^24.15.0 || >=26.0.0`): https://nodejs.org/en/download

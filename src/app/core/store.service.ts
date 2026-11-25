@@ -3,6 +3,7 @@ import { DataService } from './data.service';
 import { errorText } from './data-error';
 import { GithubService } from './github.service';
 import { Person, ResumeDocument, SectionSchema } from './models';
+import { RESUME_SCHEMA } from './resume-schema';
 
 /** In-memory copy of the JSON document. Saves go to the local API or to a GitHub commit. */
 @Injectable({ providedIn: 'root' })
@@ -19,7 +20,7 @@ export class StoreService {
   readonly mode = this.data.mode;
   readonly readOnly = computed(() => this.mode() === 'github' && !this.github.hasToken());
 
-  readonly schema = computed(() => this.doc()?.schema ?? null);
+  readonly schema = computed(() => RESUME_SCHEMA);
   readonly people = computed<Person[]>(() => this.doc()?.people ?? []);
   readonly sectionList = computed<SectionSchema[]>(() => {
     const s = this.schema();

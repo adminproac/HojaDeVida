@@ -62,8 +62,9 @@ export class ProfileFormComponent implements OnInit {
     const person = this.id() ? this.store.person(this.id()) : null;
     if (this.id() && !person) { this.notFound.set(true); return; }
     this.person.set(person);
-    this.fields.set(doc.schema.profile.fields);
-    this.form.set(groupFor(doc.schema.profile.fields, person?.profile ?? {}));
+    const fields = this.store.schema().profile.fields;
+    this.fields.set(fields);
+    this.form.set(groupFor(fields, person?.profile ?? {}));
   }
 
   async save() {

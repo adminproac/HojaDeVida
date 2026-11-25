@@ -7,7 +7,7 @@ import { DataSchema } from './models';
 import { parseResumeText } from './pdf-resume-parser';
 import { extractPdfText } from './pdf-text';
 
-const schema = JSON.parse(readFileSync(path.resolve('Data/resume-data.json'), 'utf8')).schema as DataSchema;
+const schema = JSON.parse(readFileSync(path.resolve('src/app/core/resume-schema.json'), 'utf8')) as DataSchema;
 
 const SPANISH = `
 ANA MARIA LOPEZ
@@ -49,6 +49,18 @@ AWS Certified Developer — Amazon — 2022-06
 INFORMACION ADICIONAL
 Disponibilidad inmediata
 `;
+
+describe('resume data file', () => {
+  it('stores people only, without field types or sizes', () => {
+    const doc = JSON.parse(readFileSync(path.resolve('Data/resume-data.json'), 'utf8'));
+    expect(doc.schema).toBeUndefined();
+    expect(doc.meta.schemaVersion).toBe('3.0.0');
+    expect(doc.meta.defaultLanguage).toBe('es');
+    expect(doc.people.length).toBeGreaterThan(0);
+    expect(doc.people[0].profile.fullName).toBeTruthy();
+    expect(doc.people[0].id).toBeTruthy();
+  });
+});
 
 describe('parseResumeText', () => {
   it('parses a Spanish résumé into the schema shape', () => {

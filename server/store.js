@@ -16,10 +16,23 @@ const BACKUP_DIR = path.join(DATA_DIR, 'backups');
 
 let queue = Promise.resolve();
 
+function asData(doc) {
+  if (doc && typeof doc === 'object' && doc.schema) {
+    delete doc.schema;
+    if (doc.meta && typeof doc.meta.schemaVersion === 'string' && doc.meta.schemaVersion.startsWith('2')) {
+      doc.meta.schemaVersion = '3.0.0';
+    }
+  }
+  if (!doc.meta || typeof doc.meta !== 'object') doc.meta = {};
+  if (!Array.isArray(doc.people)) doc.people = [];
+  return doc;
+}
+
 async function read() {
   const raw = await fsp.readFile(DATA_FILE, 'utf8');
   // Quitar BOM si el archivo fue guardado con uno (Notepad en Windows).
-  return JSON.parse(raw.replace(/^\uFEFF/, ''));
+  // Un archivo antiguo puede traer `schema`; se descarta para no volver a guardarlo.
+  return asData(JSON.parse(raw.replace(/^\uFEFF/, '')));
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -38,6 +51,7 @@ async function renameWithRetry(from, to) {
 }
 
 async function writeAtomic(doc) {
+  asData(doc);
   const tmp = path.join(DATA_DIR, `.${path.basename(DATA_FILE)}.${process.pid}.${Date.now()}.tmp`);
   const json = JSON.stringify(doc, null, 2) + '\n';
   const handle = await fsp.open(tmp, 'w');

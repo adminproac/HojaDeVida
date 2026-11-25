@@ -1,6 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { DataError, githubMessage } from './data-error';
 import { ResumeDocument } from './models';
+import { asDataDocument } from './resume-schema';
 
 const OWNER = 'adminproac';
 const REPO = 'HojaDeVida';
@@ -101,7 +102,7 @@ export class GithubService {
         throw new DataError(res.status, githubMessage(res.status, { message: 'Could not read Data/resume-data.json' }));
       }
       const text = (await res.text()).replace(/^\uFEFF/, '');
-      this.latest = JSON.parse(text) as ResumeDocument;
+      this.latest = asDataDocument(JSON.parse(text) as ResumeDocument);
     }
     void this.refreshLastCommit();
     return this.latest;
@@ -118,6 +119,7 @@ export class GithubService {
       const current = await this.fetchContents(true);
       const doc = structuredClone(current.doc);
       const result = mutator(doc);
+      asDataDocument(doc);
       doc.meta.lastUpdated = new Date().toISOString();
       const res = await fetch(this.contentsUrl(), {
         method: 'PUT',
@@ -186,7 +188,7 @@ export class GithubService {
       throw new DataError(res.status, githubMessage(res.status, { message: 'GitHub did not return Data/resume-data.json' }));
     }
     const text = decodeBase64(body.content).replace(/^\uFEFF/, '');
-    return { sha: body.sha, doc: JSON.parse(text) as ResumeDocument };
+    return { sha: body.sha, doc: asDataDocument(JSON.parse(text) as ResumeDocument) };
   }
 }
 

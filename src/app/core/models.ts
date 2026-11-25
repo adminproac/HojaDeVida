@@ -67,7 +67,8 @@ export interface Person {
 
 export interface ResumeDocument {
   meta: { schemaVersion: string; defaultLanguage: Lang; supportedLanguages: Lang[]; lastUpdated: string; [k: string]: unknown };
-  schema: DataSchema;
+  /** Present only in files saved before version 3. Ignored and removed on the next save. */
+  schema?: DataSchema;
   people: Person[];
 }
 

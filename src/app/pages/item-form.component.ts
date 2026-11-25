@@ -70,7 +70,7 @@ export class ItemFormComponent implements OnInit {
     const doc = await this.store.ready();
     if (!doc) return;
     const person = this.store.person(this.id());
-    const schema = doc.schema.sections[this.section$()];
+    const schema = this.store.schema().sections[this.section$()];
     const items = this.store.items(person, this.section$());
     const item: SectionItem | undefined = this.itemId() ? items.find((i) => i.id === this.itemId()) : undefined;
     if (!person || !schema || (this.itemId() && !item)) { this.notFound.set(true); return; }
