@@ -8,7 +8,7 @@
       "es"
     ],
     "source": "CV PDF provided by the owner (JESUS EDGAR DUARTE)",
-    "lastUpdated": "2026-11-25T00:15:42.215Z"
+    "lastUpdated": "2026-11-25T00:34:25.296Z"
   },
   "schema": {
     "conventions": {
@@ -2249,6 +2249,34 @@
           "es": "mexico"
         },
         "website": null,
+        "photoUrl": null
+      },
+      "summary": [],
+      "experience": [],
+      "otherExperience": [],
+      "education": [],
+      "skills": [],
+      "languages": [],
+      "certifications": [],
+      "additionalInfo": []
+    },
+    {
+      "id": "person-06591b7c",
+      "createdAt": "2026-11-25T00:34:25.296Z",
+      "updatedAt": "2026-11-25T00:34:25.296Z",
+      "profile": {
+        "fullName": "Kappa (TEST ENTRY)",
+        "headline": {
+          "en": "River Safety Consultant & Cucumber Agronomist (TEST)",
+          "es": "Consultor de Seguridad Fluvial y Agrónomo de Pepinos (PRUEBA)"
+        },
+        "email": "kappa.test@example.com",
+        "phone": "555-0147",
+        "location": {
+          "en": "Sumida River, Tokyo, Japan",
+          "es": "Río Sumida, Tokio, Japón"
+        },
+        "website": "https://example.com/kappa-test",
         "photoUrl": null
       },
       "summary": [],
