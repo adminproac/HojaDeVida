@@ -8,7 +8,7 @@
       "es"
     ],
     "source": "CV PDF provided by the owner (JESUS EDGAR DUARTE)",
-    "lastUpdated": "2026-11-25T02:02:38.012Z"
+    "lastUpdated": "2026-11-25T03:55:06.160Z"
   },
   "people": [
     {
@@ -1110,6 +1110,31 @@
           ]
         }
       ],
+      "languages": [],
+      "certifications": [],
+      "additionalInfo": []
+    },
+    {
+      "id": "person-e7d148ba",
+      "createdAt": "2026-11-25T03:55:06.159Z",
+      "updatedAt": "2026-11-25T03:55:06.160Z",
+      "profile": {
+        "fullName": "Jesus Edgar Duarte Caceres",
+        "headline": {
+          "en": "Bachelor Math and phisic",
+          "es": "Lic. en Matematias y fisica"
+        },
+        "email": "jesus_edgar_duarte_caceres@hotmail.com",
+        "phone": "4704613326",
+        "location": null,
+        "website": null,
+        "photoUrl": null
+      },
+      "summary": [],
+      "experience": [],
+      "otherExperience": [],
+      "education": [],
+      "skills": [],
       "languages": [],
       "certifications": [],
       "additionalInfo": []
