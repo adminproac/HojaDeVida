@@ -20,6 +20,8 @@ import { TPipe } from '../shared/pipes';
             <div class="spinner-border text-primary"></div>
           } @else if (!session.configured()) {
             <div class="alert alert-warning text-left" role="status">{{ 'oauthMissing' | t }}</div>
+          } @else if (session.canRetry()) {
+            <button type="button" class="btn btn-primary btn-block" (click)="session.retryLogin()">{{ 'oauthRetry' | t }}</button>
           } @else {
             <button type="button" class="btn btn-primary btn-block" (click)="session.startLogin()">
               <i class="fab fa-github mr-2"></i>{{ 'loginWithGithub' | t }}

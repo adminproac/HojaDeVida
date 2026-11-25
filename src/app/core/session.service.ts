@@ -6,13 +6,21 @@ import { I18nService } from './i18n.service';
 import { environment } from '../../environments/environment';
 import {
   LEGACY_SESSION_KEY,
+  LOGOUT_REASON_KEY,
+  OAUTH_RETRY_KEY,
   OAUTH_STATE_KEY,
+  OAUTH_USED_CODE_KEY,
+  TAB_SESSION_KEY,
+  TabSession,
+  canAutoRestart,
+  captureOauthParams,
   createOauthState,
   exchangeEndpoint,
-  isOauthCallbackPath,
   oauthConfigured,
   oauthRedirectUri,
   oauthStateMatches,
+  parseTabSession,
+  shouldExchangeCode,
 } from './oauth';
 import { SESSION_TIMEOUT_MS, sessionClock } from './session-clock';
 import { ToastService } from './toast.service';
@@ -21,6 +29,20 @@ interface GithubProfile {
   login: string;
   displayName: string;
   avatarUrl: string;
+}
+
+type OauthFailure = 'oauthDenied' | 'oauthState' | 'oauthFailed' | 'oauthMissing';
+
+/** Se lee al importar el módulo, antes de que el enrutador conserve ?code&state. */
+const capturedOauth = stripCallbackQuery();
+
+function stripCallbackQuery() {
+  if (typeof window === 'undefined') return null;
+  const captured = captureOauthParams(window.location.href);
+  if (captured.strippedHref !== window.location.href) {
+    history.replaceState(null, '', captured.strippedHref);
+  }
+  return captured;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -35,15 +57,17 @@ export class SessionService {
   readonly displayName = signal('');
   readonly avatarUrl = signal('');
   readonly logoutReason = signal<string | null>(null);
+  readonly canRetry = signal(false);
   readonly configured = signal(false);
   readonly configReady = signal(false);
-  readonly callbackPending = signal(isOauthCallbackPath(window.location.pathname));
+  readonly callbackPending = signal(!!(capturedOauth?.code || capturedOauth?.error));
 
   private clientId = '';
   private proxyUrl = '';
   private allowedLogins: string[] = environment.allowedLogins || [];
   private warned = false;
   private lastActivity = 0;
+  private lastPersist = 0;
   private finishing: Promise<string | null> | null = null;
 
   readonly gate = computed(() => {
@@ -55,11 +79,13 @@ export class SessionService {
   constructor() {
     clearLegacyToken();
     try { sessionStorage.removeItem(LEGACY_SESSION_KEY); } catch { /* private mode */ }
+    this.readStashedReason();
     const bump = () => this.bump();
     for (const name of ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'] as const) {
       window.addEventListener(name, bump, { passive: true });
     }
     window.setInterval(() => this.check(), 1000);
+    if (!capturedOauth?.code && !capturedOauth?.error) this.restoreTab();
     void this.loadConfig();
   }
 
@@ -92,16 +118,16 @@ export class SessionService {
     this.configReady.set(true);
   }
 
+  /** Solo lo llama el botón. No pide consentimiento extra y no corre al cargar la página. */
   startLogin() {
-    if (!this.configured() || !this.clientId) return;
-    const state = createOauthState();
-    sessionStorage.setItem(OAUTH_STATE_KEY, state);
-    const url = new URL('https://github.com/login/oauth/authorize');
-    url.searchParams.set('client_id', this.clientId);
-    url.searchParams.set('redirect_uri', oauthRedirectUri(document.baseURI));
-    url.searchParams.set('scope', environment.oauthScope || 'public_repo');
-    url.searchParams.set('state', state);
-    window.location.assign(url.toString());
+    this.logoutReason.set(null);
+    this.canRetry.set(false);
+    try { sessionStorage.removeItem(OAUTH_RETRY_KEY); } catch { /* private mode */ }
+    this.startAuthorize();
+  }
+
+  retryLogin() {
+    this.startLogin();
   }
 
   finishRedirect(): Promise<string | null> {
@@ -115,31 +141,42 @@ export class SessionService {
     this.displayName.set('');
     this.avatarUrl.set('');
     this.warned = false;
+    this.canRetry.set(false);
+    this.callbackPending.set(false);
     this.github.clearToken();
     setApiSessionToken(null);
-    try { sessionStorage.removeItem(OAUTH_STATE_KEY); } catch { /* private mode */ }
+    try { sessionStorage.removeItem(TAB_SESSION_KEY); } catch { /* private mode */ }
     try { sessionStorage.removeItem(LEGACY_SESSION_KEY); } catch { /* private mode */ }
     clearLegacyToken();
-    this.callbackPending.set(false);
-    if (reason === 'idle') this.logoutReason.set(this.i18n.t('sessionIdle'));
-    if (!window.location.pathname.endsWith('/auth/callback')) void this.router.navigateByUrl('/');
+    try {
+      if (reason === 'idle') sessionStorage.setItem(LOGOUT_REASON_KEY, 'idle');
+      else sessionStorage.removeItem(LOGOUT_REASON_KEY);
+    } catch { /* private mode */ }
+    window.location.replace(new URL(document.baseURI).href);
   }
 
   private async finishRedirectNow(): Promise<string | null> {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    const state = params.get('state');
-    const providerError = params.get('error');
+    const code = capturedOauth?.code ?? null;
+    const state = capturedOauth?.state ?? null;
+    const providerError = capturedOauth?.error ?? null;
+
+    if (providerError === 'access_denied') return this.failLogin('oauthDenied');
+    if (!code) {
+      this.callbackPending.set(false);
+      if (this.authenticated()) await this.router.navigateByUrl('/dashboard', { replaceUrl: true });
+      else this.replaceWithLogin();
+      return null;
+    }
+
     let stored: string | null = null;
     try { stored = sessionStorage.getItem(OAUTH_STATE_KEY); } catch { stored = null; }
-    try { sessionStorage.removeItem(OAUTH_STATE_KEY); } catch { /* private mode */ }
-    if (providerError || !code || !oauthStateMatches(stored, state)) {
-      this.callbackPending.set(false);
-      const key = providerError === 'access_denied' ? 'oauthDenied' : 'oauthState';
-      this.logoutReason.set(this.i18n.t(key));
-      await this.router.navigateByUrl('/', { replaceUrl: true });
-      return this.i18n.t(key);
-    }
+    if (!oauthStateMatches(stored, state)) return this.failLogin('oauthState');
+
+    let used: string | null = null;
+    try { used = sessionStorage.getItem(OAUTH_USED_CODE_KEY); } catch { used = null; }
+    if (!shouldExchangeCode(code, used)) return this.restartOrFail();
+    try { sessionStorage.setItem(OAUTH_USED_CODE_KEY, code); } catch { /* private mode */ }
+
     try {
       if (!this.configReady()) await this.loadConfig();
       const res = await fetch(exchangeEndpoint(this.proxyUrl), {
@@ -155,22 +192,59 @@ export class SessionService {
       const token = typeof body?.access_token === 'string' ? body.access_token : '';
       if (!res.ok || !token) throw new Error(res.status === 503 ? 'missing' : 'failed');
       const profile = await this.githubProfile(token);
+      try { sessionStorage.removeItem(OAUTH_RETRY_KEY); } catch { /* private mode */ }
       this.begin(profile, token);
       await this.router.navigateByUrl('/dashboard', { replaceUrl: true });
       return null;
     } catch (err) {
       this.github.clearToken();
       setApiSessionToken(null);
-      this.callbackPending.set(false);
-      const key = err instanceof Error && err.message === 'denied'
-        ? 'oauthDenied'
-        : err instanceof Error && err.message === 'missing'
-          ? 'oauthMissing'
-          : 'oauthFailed';
-      this.logoutReason.set(this.i18n.t(key));
-      await this.router.navigateByUrl('/', { replaceUrl: true });
-      return this.i18n.t(key);
+      try { sessionStorage.removeItem(TAB_SESSION_KEY); } catch { /* private mode */ }
+      const message = err instanceof Error ? err.message : '';
+      if (message === 'denied') return this.failLogin('oauthDenied');
+      if (message === 'missing') return this.failLogin('oauthMissing');
+      return this.restartOrFail();
     }
+  }
+
+  private async restartOrFail(): Promise<string | null> {
+    if (!this.configReady()) await this.loadConfig();
+    let flag: string | null = null;
+    try { flag = sessionStorage.getItem(OAUTH_RETRY_KEY); } catch { flag = null; }
+    if (canAutoRestart(flag) && this.configured() && this.clientId) {
+      try { sessionStorage.setItem(OAUTH_RETRY_KEY, '1'); } catch { /* private mode */ }
+      this.startAuthorize();
+      return null;
+    }
+    return this.failLogin('oauthFailed');
+  }
+
+  private failLogin(key: OauthFailure): string {
+    this.callbackPending.set(false);
+    this.authenticated.set(false);
+    const message = this.i18n.t(key);
+    this.logoutReason.set(message);
+    this.canRetry.set(key === 'oauthFailed' || key === 'oauthState');
+    try { sessionStorage.setItem(LOGOUT_REASON_KEY, key); } catch { /* private mode */ }
+    this.replaceWithLogin();
+    return message;
+  }
+
+  private replaceWithLogin() {
+    const clean = new URL(document.baseURI).href;
+    if (window.location.href !== clean) window.location.replace(clean);
+  }
+
+  private startAuthorize() {
+    if (!this.configured() || !this.clientId) return;
+    const state = createOauthState();
+    sessionStorage.setItem(OAUTH_STATE_KEY, state);
+    const url = new URL('https://github.com/login/oauth/authorize');
+    url.searchParams.set('client_id', this.clientId);
+    url.searchParams.set('redirect_uri', oauthRedirectUri(document.baseURI));
+    url.searchParams.set('scope', environment.oauthScope || 'public_repo');
+    url.searchParams.set('state', state);
+    window.location.assign(url.toString());
   }
 
   private async githubProfile(token: string): Promise<GithubProfile> {
@@ -197,6 +271,7 @@ export class SessionService {
 
   private begin(profile: GithubProfile, token: string) {
     this.logoutReason.set(null);
+    this.canRetry.set(false);
     this.username.set(profile.login);
     this.displayName.set(profile.displayName);
     this.avatarUrl.set(profile.avatarUrl);
@@ -206,12 +281,59 @@ export class SessionService {
     setApiSessionToken(token);
     this.authenticated.set(true);
     this.callbackPending.set(false);
+    this.persistTab();
+  }
+
+  private restoreTab() {
+    let raw: string | null = null;
+    try { raw = sessionStorage.getItem(TAB_SESSION_KEY); } catch { raw = null; }
+    const saved = parseTabSession(raw, Date.now());
+    if (!saved) {
+      try { sessionStorage.removeItem(TAB_SESSION_KEY); } catch { /* private mode */ }
+      return;
+    }
+    this.lastActivity = saved.lastActivity;
+    this.username.set(saved.login);
+    this.displayName.set(saved.displayName);
+    this.avatarUrl.set(saved.avatarUrl);
+    this.github.useMemoryToken(saved.token);
+    setApiSessionToken(saved.token);
+    this.authenticated.set(true);
+    this.callbackPending.set(false);
+  }
+
+  private persistTab() {
+    const token = this.github.token();
+    if (!this.authenticated() || !token) return;
+    const payload: TabSession = {
+      token,
+      login: this.username(),
+      displayName: this.displayName(),
+      avatarUrl: this.avatarUrl(),
+      lastActivity: this.lastActivity,
+    };
+    try { sessionStorage.setItem(TAB_SESSION_KEY, JSON.stringify(payload)); } catch { /* private mode */ }
+    this.lastPersist = Date.now();
+  }
+
+  private readStashedReason() {
+    let key: string | null = null;
+    try { key = sessionStorage.getItem(LOGOUT_REASON_KEY); } catch { key = null; }
+    if (!key) return;
+    try { sessionStorage.removeItem(LOGOUT_REASON_KEY); } catch { /* private mode */ }
+    const messageKey = key === 'idle' ? 'sessionIdle'
+      : key === 'oauthDenied' || key === 'oauthState' || key === 'oauthFailed' || key === 'oauthMissing' ? key
+      : null;
+    if (!messageKey) return;
+    this.logoutReason.set(this.i18n.t(messageKey));
+    this.canRetry.set(key === 'oauthFailed' || key === 'oauthState');
   }
 
   private bump() {
     if (!this.authenticated()) return;
     this.lastActivity = Date.now();
     this.warned = false;
+    if (Date.now() - this.lastPersist > 5000) this.persistTab();
   }
 
   private check() {
@@ -220,6 +342,7 @@ export class SessionService {
     if (phase === 'expired') this.logout('idle');
     else if (phase === 'warning' && !this.warned) {
       this.warned = true;
+      this.persistTab();
       this.toast.show(this.i18n.t('sessionWarning'), 'info', SESSION_TIMEOUT_MS);
     }
   }

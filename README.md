@@ -100,7 +100,7 @@ cp .env.example .env
 
 Edite `.env` con el Client ID y el Client Secret de la OAuth App de **localhost** (la segunda). Opcional: `GITHUB_ALLOWED_LOGINS=su-usuario`. Luego `npm start`. La API lee `.env` y la página, en http://localhost:4200/, ofrece el mismo botón. El archivo `.env` está en `.gitignore`.
 
-El token que entrega GitHub no se guarda en `localStorage` ni en `sessionStorage`. **Cerrar sesión**, o 5 minutos sin usar la página, lo borra de la memoria. Un aviso aparece 30 segundos antes. Mover el mouse, escribir, hacer clic o cambiar de página renueva el plazo. Recargar la pestaña también pide iniciar sesión otra vez.
+El botón **Iniciar sesión con GitHub** es lo único que abre la pantalla de GitHub. Recargar la página no pide autorización otra vez: el token queda en `sessionStorage` de esa pestaña (no en `localStorage`). **Cerrar sesión** lo borra y deja la dirección sin `?code` ni `?state`. Si no usa la página durante **5 minutos**, pasa lo mismo; un aviso aparece 30 segundos antes. Mover el mouse, escribir, hacer clic o cambiar de página renueva el plazo. Una pestaña nueva sí pide iniciar sesión. Si un intento falla porque el código ya se usó, la página lo reintenta una vez sola y, si sigue fallando, muestra **Reintentar**.
 
 ---
 

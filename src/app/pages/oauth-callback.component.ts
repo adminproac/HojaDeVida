@@ -1,19 +1,18 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { SessionService } from '../core/session.service';
 import { TPipe } from '../shared/pipes';
 
-/** Recibe ?code=&state= y canjea el código. No muestra el token. */
+/** Canjea el código una sola vez. La URL ya no lleva ?code&state. */
 @Component({
   selector: 'app-oauth-callback',
-  imports: [TPipe, RouterLink],
+  imports: [TPipe],
   template: `
     <div class="login-page">
       <div class="card login-card shadow-lg">
         <div class="card-body text-center">
           @if (error()) {
             <div class="alert alert-danger text-left" role="alert">{{ error() }}</div>
-            <a class="btn btn-primary" routerLink="/">{{ 'loginWithGithub' | t }}</a>
+            <button type="button" class="btn btn-primary" (click)="session.retryLogin()">{{ 'oauthRetry' | t }}</button>
           } @else {
             <div class="spinner-border text-primary"></div>
             <p class="text-gray-600 small mt-3 mb-0">{{ 'oauthWorking' | t }}</p>
@@ -24,7 +23,7 @@ import { TPipe } from '../shared/pipes';
   `,
 })
 export class OauthCallbackComponent implements OnInit {
-  private session = inject(SessionService);
+  protected session = inject(SessionService);
   protected readonly error = signal<string | null>(null);
 
   ngOnInit() {

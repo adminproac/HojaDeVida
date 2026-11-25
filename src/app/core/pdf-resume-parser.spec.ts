@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 import { describe, expect, it } from 'vitest';
 import { DataSchema, ResumeDocument } from './models';
-import { exchangeEndpoint, oauthConfigured, oauthRedirectUri, oauthStateMatches, tokenIsOnlyInMemory } from './oauth';
+import { TAB_SESSION_KEY, canAutoRestart, captureOauthParams, exchangeEndpoint, oauthConfigured, oauthRedirectUri, oauthStateMatches, parseTabSession, shouldExchangeCode, tokenIsOnlyInMemory } from './oauth';
 import { parseResumeText } from './pdf-resume-parser';
 import { asDataDocument } from './resume-schema';
 import { SESSION_TIMEOUT_MS, SESSION_WARN_MS, sessionClock } from './session-clock';
@@ -76,9 +76,11 @@ describe('GitHub OAuth session', () => {
     expect(oauthStateMatches('short', 'short')).toBe(false);
   });
 
-  it('keeps the access token in memory and out of storage', () => {
+  it('keeps the access token out of localStorage and the old session key', () => {
     const token = 'gho_solo_en_memoria';
     localStorage.setItem('resume-admin.oauthState', 'a'.repeat(32));
+    expect(tokenIsOnlyInMemory(token, localStorage, sessionStorage)).toBe(true);
+    sessionStorage.setItem(TAB_SESSION_KEY, JSON.stringify({ token }));
     expect(tokenIsOnlyInMemory(token, localStorage, sessionStorage)).toBe(true);
     sessionStorage.setItem('resume-admin.session', JSON.stringify({ token }));
     expect(tokenIsOnlyInMemory(token, localStorage, sessionStorage)).toBe(false);
@@ -86,6 +88,30 @@ describe('GitHub OAuth session', () => {
     localStorage.setItem('resume-admin.githubToken', token);
     expect(tokenIsOnlyInMemory(token, localStorage, sessionStorage)).toBe(false);
     localStorage.clear();
+  });
+
+  it('strips the code from the callback URL and exchanges it only once', () => {
+    const href = 'https://adminproac.github.io/HojaDeVida/auth/callback?code=abc12345&state=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    const captured = captureOauthParams(href);
+    expect(captured.code).toBe('abc12345');
+    expect(captured.state).toBe('a'.repeat(32));
+    expect(captured.strippedHref).toBe('https://adminproac.github.io/HojaDeVida/auth/callback');
+    expect(captureOauthParams(captured.strippedHref).code).toBeNull();
+    expect(shouldExchangeCode(captured.code, null)).toBe(true);
+    expect(shouldExchangeCode(captured.code, captured.code)).toBe(false);
+    expect(canAutoRestart(null)).toBe(true);
+    expect(canAutoRestart('1')).toBe(false);
+  });
+
+  it('restores a tab session only before the idle timeout', () => {
+    const now = 5_000_000;
+    const live = parseTabSession(JSON.stringify({
+      token: 'gho_tab', login: 'edgar', displayName: 'Edgar', avatarUrl: '', lastActivity: now - 1000,
+    }), now);
+    expect(live?.token).toBe('gho_tab');
+    expect(parseTabSession(JSON.stringify({
+      token: 'gho_tab', login: 'edgar', displayName: 'Edgar', avatarUrl: '', lastActivity: now - SESSION_TIMEOUT_MS,
+    }), now)).toBeNull();
   });
 
   it('treats a placeholder Worker URL as not configured', () => {
@@ -110,9 +136,11 @@ describe('GitHub OAuth session', () => {
     expect(doc.people).toEqual(people);
     const source = readFileSync(path.resolve('src/app/core/session.service.ts'), 'utf8');
     expect(source).not.toContain('localStorage.setItem');
-    expect(source).not.toContain("'resume-admin.session'");
-    expect(source.match(/sessionStorage\.setItem/g)).toEqual(['sessionStorage.setItem']);
+    expect(source).not.toContain('removeItem(OAUTH_STATE_KEY)');
+    expect(source).not.toContain('prompt');
+    expect(source).toContain('history.replaceState');
     expect(source).toContain('sessionStorage.setItem(OAUTH_STATE_KEY, state)');
+    expect(source).toContain('TAB_SESSION_KEY');
   });
 
   it('expires a session after 5 idle minutes and warns 30 seconds before', () => {
