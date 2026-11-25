@@ -10,11 +10,12 @@ import { ToastService } from '../core/toast.service';
 import { FieldSchema, SectionItem, SectionSchema } from '../core/models';
 import { PageHeaderComponent } from '../shared/page-header.component';
 import { LocPipe, TPipe } from '../shared/pipes';
+import { ResumeSheetComponent } from './resume-sheet.component';
 
 /** "Consultar": read-only résumé of one person with edit/delete/add/move actions per section. */
 @Component({
   selector: 'app-person-view',
-  imports: [RouterLink, NgTemplateOutlet, PageHeaderComponent, TPipe, LocPipe],
+  imports: [RouterLink, NgTemplateOutlet, PageHeaderComponent, TPipe, LocPipe, ResumeSheetComponent],
   templateUrl: './person-view.component.html',
 })
 export class PersonViewComponent {
@@ -100,5 +101,4 @@ export class PersonViewComponent {
     else this.toast.show(text, 'danger');
   }
 
-  print() { window.print(); }
 }

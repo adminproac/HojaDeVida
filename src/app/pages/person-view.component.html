@@ -1,6 +1,7 @@
 @if (person(); as p) {
+  <div class="no-print">
   <app-page-header [title]="'resume' | t" [crumbs]="[{ label: 'home' | t, link: '/dashboard' }, { label: 'people' | t, link: '/people' }, { label: p.profile.fullName }]">
-    <button type="button" class="btn btn-light mr-1" (click)="print()" [title]="'print' | t"><i class="bi bi-printer"></i></button>
+    <a class="btn btn-primary mr-1" [routerLink]="['/people', p.id, 'print']"><i class="bi bi-printer mr-1"></i>{{ 'print' | t }}</a>
     @if (!store.readOnly()) {
       <a class="btn btn-success mr-1" [routerLink]="['/people', p.id, 'edit']"><i class="bi bi-pencil mr-1"></i>{{ 'editProfile' | t }}</a>
       <button type="button" class="btn btn-danger" (click)="removePerson()" [title]="'delete' | t"><i class="bi bi-trash"></i></button>
@@ -106,6 +107,11 @@
         </div>
       }
     </div>
+  </div>
+  </div>
+
+  <div class="print-only">
+    <app-resume-sheet [person]="p" />
   </div>
 
   <ng-template #exp let-it>

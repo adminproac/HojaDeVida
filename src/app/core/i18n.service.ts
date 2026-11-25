@@ -95,6 +95,10 @@ const DICT = {
   records: { en: 'records', es: 'registros' },
   contact: { en: 'Contact', es: 'Contacto' },
   print: { en: 'Print', es: 'Imprimir' },
+  printHint: {
+    en: 'This preview is what will be printed or saved as PDF. It uses the language selected above and leaves out empty fields.',
+    es: 'Esta vista es la que se imprime o se guarda como PDF. Usa el idioma elegido arriba y omite los campos vacíos.',
+  },
   createdAt: { en: 'Created', es: 'Creado' },
   githubConnect: { en: 'Connect to GitHub', es: 'Conectar con GitHub' },
   githubHelp: {
