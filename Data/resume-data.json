@@ -8,7 +8,7 @@
       "es"
     ],
     "source": "CV PDF provided by the owner (JESUS EDGAR DUARTE)",
-    "lastUpdated": "2026-11-25T00:05:01.679Z"
+    "lastUpdated": "2026-11-25T00:05:25.692Z"
   },
   "schema": {
     "conventions": {
@@ -2222,6 +2222,34 @@
         },
         "website": "https://x.com",
         "photoUrl": "https://grok.com/imagine/post/f1e8b763-e218-4c02-b495-3c2d4727b789"
+      },
+      "summary": [],
+      "experience": [],
+      "otherExperience": [],
+      "education": [],
+      "skills": [],
+      "languages": [],
+      "certifications": [],
+      "additionalInfo": []
+    },
+    {
+      "id": "person-43597c5f",
+      "createdAt": "2026-11-25T00:05:25.692Z",
+      "updatedAt": "2026-11-25T00:05:25.692Z",
+      "profile": {
+        "fullName": "daniel daniel",
+        "headline": {
+          "en": "medico",
+          "es": "medico"
+        },
+        "email": "lizethduartejulioperez@gmail.com",
+        "phone": "786986897",
+        "location": {
+          "en": "mexico",
+          "es": "mexico"
+        },
+        "website": null,
+        "photoUrl": null
       },
       "summary": [],
       "experience": [],
