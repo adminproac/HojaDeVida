@@ -8,7 +8,7 @@
       "es"
     ],
     "source": "CV PDF provided by the owner (JESUS EDGAR DUARTE)",
-    "lastUpdated": "2026-11-25T04:01:28.932Z"
+    "lastUpdated": "2026-11-25T04:06:33.482Z"
   },
   "people": [
     {
@@ -27,10 +27,10 @@
           "id": "sum-001",
           "order": 1,
           "createdAt": "2026-11-23T22:55:00.000Z",
-          "updatedAt": "2026-11-24T22:28:06.066Z",
+          "updatedAt": "2026-11-25T04:06:33.481Z",
           "text": {
             "en": "Senior Software Engineer with more than 15 years of experience in software development using technologies such as Visual FoxPro, .NET (C#, VB.NET), JavaScript, Bootstrap, Node.js, React, Angular, MVC, WCF, and .NET Core 3.1/6/8. Strong background in SQL Server (T-SQL and Reporting Services). Experienced in backend development, frontend development, and multi-layer architectures.",
-            "es": "Ingeniero de Software Senior con más de 15 años de experiencia en desarrollo de software utilizando tecnologías como Visual FoxPro, .NET (C#, VB.NET), JavaScript, Bootstrap, Node.js, React, Angular, MVC, WCF y .NET Core 3.1/6/8. Sólida trayectoria en SQL Server (T-SQL y Reporting Services). Experiencia en desarrollo backend, desarrollo frontend y arquitecturas en múltiples capas."
+            "es": "INGENIERO de Software Senior con más de 15 años de experiencia en desarrollo de software utilizando tecnologías como Visual FoxPro, .NET (C#, VB.NET), JavaScript, Bootstrap, Node.js, React, Angular, MVC, WCF y .NET Core 3.1/6/8. Sólida trayectoria en SQL Server (T-SQL y Reporting Services). Experiencia en desarrollo backend, desarrollo frontend y arquitecturas en múltiples capas."
           }
         },
         {
@@ -758,7 +758,7 @@
         }
       ],
       "createdAt": "2026-11-23T22:55:00.000Z",
-      "updatedAt": "2026-11-24T22:28:06.066Z"
+      "updatedAt": "2026-11-25T04:06:33.481Z"
     },
     {
       "id": "person-c18d134b",
