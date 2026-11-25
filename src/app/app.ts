@@ -5,10 +5,8 @@ import { I18nService } from './core/i18n.service';
 import { StoreService } from './core/store.service';
 import { DataService } from './core/data.service';
 import { errorText } from './core/data-error';
-import { GithubService } from './core/github.service';
 import { ToastService } from './core/toast.service';
 import { ConfirmDialogComponent } from './shared/confirm-dialog.component';
-import { GithubConnectComponent } from './shared/github-connect.component';
 import { ToastsComponent } from './shared/toasts.component';
 import { LoginComponent } from './pages/login.component';
 import { SessionService } from './core/session.service';
@@ -17,14 +15,13 @@ import { Lang } from './core/models';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, ConfirmDialogComponent, GithubConnectComponent, ToastsComponent, TPipe, LoginComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ConfirmDialogComponent, ToastsComponent, TPipe, LoginComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App {
   protected i18n = inject(I18nService);
   protected store = inject(StoreService);
-  protected github = inject(GithubService);
   protected session = inject(SessionService);
   private data = inject(DataService);
   private toast = inject(ToastService);
@@ -35,7 +32,7 @@ export class App {
   protected readonly openMenu = signal<string | null>(window.innerWidth >= 768 ? 'people' : null);
   protected readonly showScrollTop = signal(false);
   protected readonly isPeopleRoute = signal(false);
-  protected readonly tokenDraft = signal('');
+  protected readonly userMenu = signal(false);
 
   constructor() {
     this.store.load();
@@ -77,20 +74,9 @@ export class App {
 
   setLang(lang: Lang) { this.i18n.setLang(lang); }
 
-  async saveToken() {
-    const value = this.tokenDraft().trim();
-    if (!value) return;
-    try {
-      await this.session.storeToken(value);
-      this.tokenDraft.set('');
-    } catch {
-      this.toast.show(this.i18n.t('loginRelogin'), 'danger');
-    }
-  }
-
-  async acceptLegacy() {
-    try { await this.session.acceptLegacyToken(); }
-    catch { this.toast.show(this.i18n.t('loginRelogin'), 'danger'); }
+  logout() {
+    this.userMenu.set(false);
+    this.session.logout('manual');
   }
 
   async reload() {

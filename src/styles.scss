@@ -24,6 +24,12 @@ a.stat-link:hover { transform: translateY(-2px); }
 
 /* Sidebar: long names inside the collapse menu */
 .sidebar .collapse-inner .collapse-item { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar .sidebar-logout .nav-link span,
+.sidebar.toggled .sidebar-logout .nav-link span { display: inline !important; font-size: 0.85rem; }
+.topbar .dropdown { position: relative; }
+.topbar .dropdown-toggle { display: inline-flex; align-items: center; border: 0; background: transparent; }
+.topbar .dropdown-menu { right: 0; left: auto; }
+.topbar .dropdown-menu.show { display: block; }
 .topbar-avatar { display: inline-flex; width: 2rem; height: 2rem; align-items: center; justify-content: center; background: #eaecf4; color: $primary; }
 .lang-toggle .btn { min-width: 42px; font-weight: 700; }
 

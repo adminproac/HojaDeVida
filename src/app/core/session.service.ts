@@ -96,6 +96,19 @@ export class SessionService {
     await this.store.load();
   }
 
+  async replaceToken(password: string, plain: string) {
+    const user = this.currentRecord();
+    if (!user || !(await verifyPassword(password, user))) throw new Error('bad-login');
+    const encryptedToken = await encryptToken(password, plain.trim());
+    const next = { ...user, encryptedToken, updatedAt: new Date().toISOString() };
+    await this.data.saveUser(next);
+    this.password = password;
+    this.github.useMemoryToken(plain.trim());
+    clearLegacyToken();
+    this.needsToken.set(false);
+    await this.store.load();
+  }
+
   async storeToken(plain: string) {
     const user = this.currentRecord();
     if (!user || !this.password) throw new Error('relogin');

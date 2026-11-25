@@ -62,6 +62,13 @@
       <a class="nav-link" href="" (click)="$event.preventDefault(); reload()"><i class="fas fa-fw fa-sync-alt"></i><span>{{ 'reload' | t }}</span></a>
     </li>
 
+    <hr class="sidebar-divider" />
+    <li class="nav-item sidebar-logout">
+      <a class="nav-link" href="" (click)="$event.preventDefault(); logout()">
+        <i class="fas fa-sign-out-alt"></i><span>{{ 'logout' | t }}</span>
+      </a>
+    </li>
+
     <hr class="sidebar-divider d-none d-md-block" />
     <div class="text-center d-none d-md-inline">
       <button class="rounded-circle border-0" id="sidebarToggle" type="button" aria-label="Toggle sidebar" (click)="toggleSidebar()"></button>
@@ -79,14 +86,7 @@
         <span class="d-none d-lg-inline text-gray-600 small">{{ 'welcome' | t }}</span>
 
         <ul class="navbar-nav ml-auto align-items-center">
-          @if (store.mode() === 'github') {
-            <li class="nav-item mx-1">
-              <span class="badge" [class.badge-success]="github.connected()" [class.badge-secondary]="!github.connected()">
-                <span class="gh-dot" [class.on]="github.connected()" [class.off]="!github.connected()"></span>
-                {{ (github.checking() ? 'githubChecking' : github.connected() ? 'githubConnected' : 'githubNotConnected') | t }}
-              </span>
-            </li>
-          } @else if (store.mode() === 'api') {
+          @if (store.mode() === 'api') {
             <li class="nav-item mx-1 d-none d-md-block">
               <span class="badge badge-info"><i class="fas fa-server mr-1"></i>{{ 'localMode' | t }}</span>
             </li>
@@ -99,20 +99,23 @@
             </div>
           </li>
           <div class="topbar-divider d-none d-sm-block"></div>
-          <li class="nav-item">
-            <span class="nav-link">
-              <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ 'appName' | t }}</span>
+          <li class="nav-item dropdown no-arrow">
+            <button type="button" class="nav-link dropdown-toggle btn btn-link" (click)="userMenu.update((open) => !open)" [attr.aria-expanded]="userMenu()">
+              <span class="mr-2 text-gray-600 small">{{ session.displayName() }}</span>
               <span class="img-profile rounded-circle topbar-avatar"><i class="fas fa-user"></i></span>
-            </span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-right shadow" [class.show]="userMenu()">
+              <h6 class="dropdown-header">{{ session.displayName() }}</h6>
+              <a class="dropdown-item" routerLink="/users" (click)="userMenu.set(false)"><i class="fas fa-key fa-sm fa-fw mr-2 text-gray-400"></i>{{ 'changeGithubToken' | t }}</a>
+              <div class="dropdown-divider"></div>
+              <button type="button" class="dropdown-item" (click)="logout()"><i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>{{ 'logout' | t }}</button>
+            </div>
           </li>
         </ul>
       </nav>
       <!-- End of Topbar -->
 
       <div class="container-fluid">
-        @if (store.mode() === 'github') {
-          <app-github-connect />
-        }
         @if (store.readOnly()) {
           <div class="alert alert-warning d-print-none" role="status"><i class="fas fa-lock mr-2"></i>{{ 'githubReadOnly' | t }}</div>
         }
@@ -156,28 +159,4 @@
 
 <app-confirm-dialog />
 <app-toasts />
-@if (session.needsToken() || session.offerLegacyToken()) {
-  <div class="modal-backdrop show"></div>
-  <div class="modal d-block" role="dialog">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">{{ 'loginTokenTitle' | t }}</h5></div>
-        <div class="modal-body">
-          <p>{{ (session.offerLegacyToken() ? 'loginMigrate' : 'loginTokenHelp') | t }}</p>
-          @if (!session.offerLegacyToken()) {
-            <input type="password" class="form-control" autocomplete="off" spellcheck="false" [value]="tokenDraft()" (input)="tokenDraft.set($any($event.target).value)" />
-          }
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" (click)="session.dismissTokenPrompt()">{{ 'cancel' | t }}</button>
-          @if (session.offerLegacyToken()) {
-            <button type="button" class="btn btn-primary" (click)="acceptLegacy()">{{ 'loginMigrateYes' | t }}</button>
-          } @else {
-            <button type="button" class="btn btn-primary" (click)="saveToken()">{{ 'githubSaveToken' | t }}</button>
-          }
-        </div>
-      </div>
-    </div>
-  </div>
-}
 }

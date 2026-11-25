@@ -14,6 +14,18 @@ import { TPipe } from '../shared/pipes';
       <button type="button" class="btn btn-primary" (click)="creating.set(!creating())">{{ 'userNew' | t }}</button>
     </app-page-header>
     @if (error()) { <div class="alert alert-danger" role="alert">{{ error() }}</div> }
+    @if (saved()) { <div class="alert alert-success" role="status">{{ 'tokenSaved' | t }}</div> }
+    <div class="card shadow mb-4">
+      <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">{{ 'changeGithubToken' | t }}</h6></div>
+      <form class="card-body" (submit)="saveToken($event)">
+        <p class="text-gray-600 small">{{ 'changeGithubTokenHelp' | t }}</p>
+        <div class="form-row">
+          <div class="form-group col-md-6"><label>{{ 'loginPassword' | t }}</label><input type="password" class="form-control" autocomplete="current-password" [value]="tokenPassword()" (input)="tokenPassword.set(val($event))" /></div>
+          <div class="form-group col-md-6"><label>{{ 'githubToken' | t }}</label><input type="password" class="form-control" autocomplete="off" spellcheck="false" [value]="tokenValue()" (input)="tokenValue.set(val($event))" /></div>
+        </div>
+        <button class="btn btn-primary" type="submit" [disabled]="busy()">{{ 'save' | t }}</button>
+      </form>
+    </div>
     @if (creating()) {
       <div class="card shadow mb-4">
         <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">{{ 'userNew' | t }}</h6></div>
@@ -71,7 +83,10 @@ export class UsersComponent {
   protected readonly password = signal('');
   protected readonly current = signal('');
   protected readonly next = signal('');
+  protected readonly tokenPassword = signal('');
+  protected readonly tokenValue = signal('');
   protected readonly error = signal<string | null>(null);
+  protected readonly saved = signal(false);
   protected readonly busy = signal(false);
 
   val(event: Event) { return (event.target as HTMLInputElement).value; }
@@ -104,6 +119,24 @@ export class UsersComponent {
       this.editing.set(null);
       this.current.set('');
       this.next.set('');
+    } catch {
+      this.error.set(this.i18n.t('loginBad'));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  async saveToken(event: Event) {
+    event.preventDefault();
+    this.error.set(null);
+    this.saved.set(false);
+    if (!this.tokenValue().trim()) { this.error.set(this.i18n.t('githubNoToken')); return; }
+    this.busy.set(true);
+    try {
+      await this.session.replaceToken(this.tokenPassword(), this.tokenValue());
+      this.tokenPassword.set('');
+      this.tokenValue.set('');
+      this.saved.set(true);
     } catch {
       this.error.set(this.i18n.t('loginBad'));
     } finally {

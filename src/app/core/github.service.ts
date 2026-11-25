@@ -26,10 +26,11 @@ const RAW = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${DATA
 
 /**
  * Reads and writes Data/resume-data.json on GitHub.
- * The token lives only in localStorage. It is never written into the repo or the JSON file.
+ * The decrypted token lives only in memory for this tab. An older localStorage copy is removed on load.
  */
 @Injectable({ providedIn: 'root' })
 export class GithubService {
+  constructor() { clearLegacyToken(); }
   readonly token = signal<string | null>(null);
   readonly hasToken = computed(() => !!this.token());
   readonly connected = signal(false);

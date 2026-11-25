@@ -44,8 +44,8 @@ Ese commit vuelve a publicar el sitio. No hace falta esperar la publicación: la
 1. En GitHub abra **Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**.
 2. Resource owner: su usuario. Repository access: **Only select repositories** y elija solo `adminproac/HojaDeVida`.
 3. Permissions → Repository permissions → **Contents: Read and write**. No hace falta ningún otro permiso.
-4. Genere el token. Ábralo en https://adminproac.github.io/HojaDeVida/, péguelo en **Conectar con GitHub**, pulse **Guardar token** y luego **Probar conexión**.
-5. El token **solo se guarda en ese navegador** (`localStorage`). No se escribe en el repositorio, ni en el JSON, ni en el código. En otro navegador o equipo hay que pegarlo otra vez. **Desconectar** lo borra de este navegador.
+4. Genere el token. En la primera pantalla de la aplicación péguelo al crear el usuario. Para cambiarlo después, entre y abra **Usuarios → Cambiar token de GitHub**.
+5. El token se **cifra con su contraseña** y se guarda en su usuario dentro del JSON (`encryptedToken`). No queda en el código ni en el almacenamiento del navegador. Al cerrar sesión, o tras 5 minutos sin uso, se borra la copia descifrada.
 
 ---
 
@@ -249,7 +249,7 @@ npm install
 npm start          # API on :3000 + Angular on :4200 (opens the browser)
 ```
 
-Live site: https://adminproac.github.io/HojaDeVida/. On GitHub Pages the page is read-only until you paste a fine-grained token (this repo only, Contents: Read and write) in **Connect to GitHub**. The token stays in that browser's localStorage and is never committed. See the Spanish section above for the exact steps. Saving there commits `Data/resume-data.json` to `main` and the page shows the new data immediately.
+Live site: https://adminproac.github.io/HojaDeVida/. Sign in first. On GitHub Pages, saving needs the fine-grained token entered when the user is created or later under **Usuarios → Cambiar token de GitHub**. The token is encrypted with the password inside the JSON and is not stored in the browser. See the Spanish section above.
 Other scripts: `npm run dev` (API auto-restart), `npm run serve` (no browser), `npm run build`, `npm run start:prod` (serve the built app from the API on :3000), `npm run backup`.
 
 ### VS Code
