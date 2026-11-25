@@ -99,6 +99,36 @@ api.delete('/people/:id', h(async (req, res) => {
   res.status(204).end();
 }));
 
+api.post('/people/import', h(async (req, res) => {
+  const replacing = typeof req.body?.replaceId === 'string' && req.body.replaceId;
+  const person = await store.update((doc) => {
+    const profile = validate(doc.schema.profile.fields, req.body?.profile ?? {}, 'profile');
+    const sections = {};
+    for (const key of Object.keys(doc.schema.sections || {})) {
+      const raw = Array.isArray(req.body?.[key]) ? req.body[key] : [];
+      const schema = sectionSchema(doc, key);
+      sections[key] = raw.map((item, index) => {
+        const value = validate(schema.fields, { ...item, order: index + 1 }, schema.key);
+        return { id: newId(PREFIX[schema.key] || schema.key.toLowerCase()), order: index + 1, createdAt: now(), updatedAt: now(), ...value };
+      });
+      renumber(sections[key]);
+    }
+    if (replacing) {
+      const current = findPerson(doc, req.body.replaceId);
+      for (const key of Object.keys(current)) {
+        if (key !== 'id' && key !== 'createdAt') delete current[key];
+      }
+      Object.assign(current, { profile, updatedAt: now(), ...sections });
+      return current;
+    }
+    const created = { id: newId('person'), createdAt: now(), updatedAt: now(), profile, ...sections };
+    doc.people = doc.people || [];
+    doc.people.push(created);
+    return created;
+  });
+  res.status(replacing ? 200 : 201).json(person);
+}));
+
 // ---------- Sections ----------
 api.get('/people/:id/:section', h(async (req, res) => {
   const doc = await store.read();

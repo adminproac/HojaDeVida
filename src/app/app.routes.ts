@@ -10,5 +10,6 @@ export const routes: Routes = [
   { path: 'people/:id/:section/new', loadComponent: () => import('./pages/item-form.component').then((m) => m.ItemFormComponent) },
   { path: 'people/:id/:section/:itemId', loadComponent: () => import('./pages/item-form.component').then((m) => m.ItemFormComponent) },
   { path: 'schema', loadComponent: () => import('./pages/schema-view.component').then((m) => m.SchemaViewComponent) },
+  { path: 'import', loadComponent: () => import('./pages/pdf-import.component').then((m) => m.PdfImportComponent) },
   { path: '**', redirectTo: 'dashboard' },
 ];

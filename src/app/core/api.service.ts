@@ -15,6 +15,9 @@ export class ApiService {
   createPerson(profile: Partial<Profile>) {
     return firstValueFrom(this.http.post<Person>(`${this.base}/people`, { profile }));
   }
+  importPerson(body: Record<string, unknown>) {
+    return firstValueFrom(this.http.post<Person>(`${this.base}/people/import`, body));
+  }
   updateProfile(personId: string, profile: Partial<Profile>) {
     return firstValueFrom(this.http.put<Person>(`${this.base}/people/${personId}/profile`, { profile }));
   }

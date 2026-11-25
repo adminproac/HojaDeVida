@@ -49,6 +49,24 @@ Ese commit vuelve a publicar el sitio. No hace falta esperar la publicación: la
 
 ---
 
+## Cargar una hoja de vida (PDF)
+
+En el menú está **Cargar hoja de vida (PDF)**. Elija un archivo PDF. La lectura ocurre en el navegador (también en GitHub Pages; no hace falta un servidor):
+
+1. Se extrae el texto del PDF.
+2. Se reconocen el nombre, el correo, el teléfono y LinkedIn, y secciones en español o inglés (Resumen, Experiencia, Educación, Habilidades, Idiomas, Certificaciones, y sus equivalentes en inglés).
+3. Aparece una **revisión editable** con los mismos formularios de la aplicación. Corrija lo que haya quedado mal.
+4. Guarde como **persona nueva**, o elija una persona existente y confirme para reemplazarla. El guardado usa la API local (`npm start`) o, en GitHub Pages, un commit del JSON si hay un token.
+
+Límites:
+
+- Un PDF escaneado o hecho solo de imágenes **no tiene texto** y no se puede importar.
+- El resultado es una aproximación. Hay que revisarlo antes de guardar.
+- El idioma del PDF llena los campos bilingües. Si el campo es obligatorio, el otro idioma recibe la misma copia para poder guardar; si es opcional, el otro idioma queda vacío.
+- Los textos se recortan al tamaño máximo del esquema. Diseños muy distintos (varias columnas, tablas) pueden mezclar secciones.
+
+---
+
 ## 1. Requisitos
 
 | Programa | Versión | Descarga |

@@ -127,6 +127,43 @@ const DICT = {
   dismiss: { en: 'Dismiss', es: 'Cerrar' },
   savedGithub: { en: 'Saved to GitHub. This page already shows the new data.', es: 'Guardado en GitHub. Esta página ya muestra los datos nuevos.' },
   createdGithub: { en: 'Created on GitHub. This page already shows the new data.', es: 'Creado en GitHub. Esta página ya muestra los datos nuevos.' },
+  pdfImport: { en: 'Import résumé (PDF)', es: 'Cargar hoja de vida (PDF)' },
+  pdfImportHelp: {
+    en: 'Choose a text PDF. The page reads it in the browser, shows a review you can edit, and then saves a new person (or replaces the person you select).',
+    es: 'Elija un PDF con texto. La página lo lee en el navegador, muestra una revisión que puede editar y luego guarda una persona nueva (o reemplaza la que usted elija).',
+  },
+  pdfImportLimits: {
+    en: 'Scanned or image-only PDFs have no text and cannot be imported. The result is a best guess: review it before saving. Very unusual layouts may mix sections.',
+    es: 'Los PDF escaneados o hechos solo de imágenes no tienen texto y no se pueden importar. El resultado es una aproximación: revíselo antes de guardar. Un diseño muy distinto puede mezclar secciones.',
+  },
+  pdfChoose: { en: 'Choose PDF', es: 'Elegir PDF' },
+  pdfParsing: { en: 'Reading the PDF…', es: 'Leyendo el PDF…' },
+  pdfPreview: { en: 'Review before saving', es: 'Revisar antes de guardar' },
+  pdfReview: { en: 'Check these points before saving.', es: 'Revise estos puntos antes de guardar.' },
+  pdfTarget: { en: 'Save as', es: 'Guardar como' },
+  pdfTargetHelp: {
+    en: 'A new person is added. If you pick someone who already exists, their résumé is replaced after you confirm.',
+    es: 'Se agrega una persona nueva. Si elige a alguien que ya existe, su hoja de vida se reemplaza después de confirmar.',
+  },
+  pdfAsNew: { en: 'New person', es: 'Persona nueva' },
+  pdfSave: { en: 'Save to the JSON file', es: 'Guardar en el archivo JSON' },
+  pdfTooBig: { en: 'The PDF is larger than 8 MB.', es: 'El PDF pesa más de 8 MB.' },
+  pdfNoText: {
+    en: 'No text was found. If this PDF is a scan or a photo, it cannot be imported.',
+    es: 'No se encontró texto. Si este PDF es un escaneo o una foto, no se puede importar.',
+  },
+  pdfNoSchema: { en: 'The résumé data is not loaded yet.', es: 'Todavía no se cargaron los datos de la hoja de vida.' },
+  pdfReadError: { en: 'The PDF could not be read.', es: 'No se pudo leer el PDF.' },
+  pdfConfirmReplace: {
+    en: 'Replace the résumé of {name} with this PDF? Their current sections will be overwritten.',
+    es: '¿Reemplazar la hoja de vida de {name} con este PDF? Las secciones actuales se sobrescriben.',
+  },
+  pdfReplaceYes: { en: 'Yes, replace', es: 'Sí, reemplazar' },
+  'pdfWarn_missing-email': { en: 'No e-mail was found. Add one before saving.', es: 'No se encontró un correo. Agréguelo antes de guardar.' },
+  'pdfWarn_missing-name': { en: 'No name was found. Add it before saving.', es: 'No se encontró el nombre. Agréguelo antes de guardar.' },
+  'pdfWarn_copied-title': { en: 'A job title was copied from the company line ({detail}). Please review it.', es: 'Un cargo se copió de la línea de la empresa ({detail}). Revíselo.' },
+  'pdfWarn_copied-credential': { en: 'A degree line was copied from the school ({detail}). Please review it.', es: 'Un título se copió de la institución ({detail}). Revíselo.' },
+  'pdfWarn_no-text': { en: 'The PDF did not contain text.', es: 'El PDF no contenía texto.' },
 } satisfies Record<string, Localized>;
 
 export type DictKey = keyof typeof DICT;

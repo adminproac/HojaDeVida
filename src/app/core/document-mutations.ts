@@ -142,6 +142,34 @@ function listOf(person: Person, key: string): SectionItem[] {
   return current as SectionItem[];
 }
 
+/** Insert a full person, or replace one, validating every section with the schema. */
+export function importPerson(doc: ResumeDocument, body: Record<string, unknown>): Person {
+  const profile = validate(doc.schema.profile.fields, body['profile'] ?? {}, 'profile') as Person['profile'];
+  const sections: Record<string, SectionItem[]> = {};
+  for (const key of Object.keys(doc.schema.sections || {})) {
+    const raw = Array.isArray(body[key]) ? body[key] as Record<string, unknown>[] : [];
+    const schema = sectionSchema(doc, key);
+    sections[key] = raw.map((item, index) => {
+      const value = validate(schema.fields, { ...item, order: index + 1 }, schema.key);
+      return { id: newId(PREFIX[schema.key] || schema.key.toLowerCase()), order: index + 1, createdAt: now(), updatedAt: now(), ...value };
+    });
+    renumber(sections[key]);
+  }
+  const replaceId = typeof body['replaceId'] === 'string' ? body['replaceId'] : '';
+  if (replaceId) {
+    const person = findPerson(doc, replaceId);
+    for (const key of Object.keys(person)) {
+      if (key !== 'id' && key !== 'createdAt') delete person[key];
+    }
+    Object.assign(person, { profile, updatedAt: now(), ...sections });
+    return person;
+  }
+  const person: Person = { id: newId('person'), createdAt: now(), updatedAt: now(), profile, ...sections };
+  doc.people = doc.people || [];
+  doc.people.push(person);
+  return person;
+}
+
 export function createPerson(doc: ResumeDocument, profile: Partial<Profile>): Person {
   const normalized = validate(doc.schema.profile.fields, profile ?? {}, 'profile') as Person['profile'];
   const person: Person = { id: newId('person'), createdAt: now(), updatedAt: now(), profile: normalized, ...emptySections(doc) };

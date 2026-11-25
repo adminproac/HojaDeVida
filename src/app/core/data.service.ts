@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ApiService } from './api.service';
-import { createItem, createPerson, deleteItem, deletePerson, moveItem, updateItem, updateProfile } from './document-mutations';
+import { createItem, createPerson, deleteItem, deletePerson, importPerson, moveItem, updateItem, updateProfile } from './document-mutations';
 import { GithubService } from './github.service';
 import { Profile, ResumeDocument, SectionItem } from './models';
 
@@ -33,6 +33,12 @@ export class DataService {
 
   async getData(): Promise<ResumeDocument> {
     return (await this.ensureMode()) === 'api' ? this.api.getData() : this.github.getData();
+  }
+
+  async importPerson(body: Record<string, unknown>) {
+    if ((await this.ensureMode()) === 'api') return this.api.importPerson(body);
+    const replacing = typeof body['replaceId'] === 'string' && body['replaceId'];
+    return this.github.update((doc) => importPerson(doc, body), replacing ? 'Reemplazar persona desde un PDF en Data/resume-data.json' : 'Agregar persona desde un PDF en Data/resume-data.json');
   }
 
   async createPerson(profile: Partial<Profile>) {
