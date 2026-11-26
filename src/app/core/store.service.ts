@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { DataService } from './data.service';
 import { errorText } from './data-error';
-import { GithubService } from './github.service';
+import { SessionService } from './session.service';
 import { Person, ResumeDocument, SectionSchema } from './models';
 import { RESUME_SCHEMA } from './resume-schema';
 
@@ -9,7 +9,7 @@ import { RESUME_SCHEMA } from './resume-schema';
 @Injectable({ providedIn: 'root' })
 export class StoreService {
   private data = inject(DataService);
-  private github = inject(GithubService);
+  private session = inject(SessionService);
 
   readonly doc = signal<ResumeDocument | null>(null);
   readonly loading = signal(false);
@@ -18,7 +18,7 @@ export class StoreService {
   /** Mutation errors stay here until dismissed or the next successful reload. */
   readonly actionError = signal<string | null>(null);
   readonly mode = this.data.mode;
-  readonly readOnly = computed(() => this.mode() === 'd1' && !this.github.hasToken());
+  readonly readOnly = computed(() => this.mode() === 'd1' && !this.session.authenticated());
 
   readonly schema = computed(() => RESUME_SCHEMA);
   readonly people = computed<Person[]>(() => this.doc()?.people ?? []);

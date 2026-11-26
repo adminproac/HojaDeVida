@@ -1,7 +1,7 @@
-# Worker de OAuth y de la base D1.
-# Secretos (no van en este archivo):
-#   wrangler secret put GITHUB_CLIENT_ID
-#   wrangler secret put GITHUB_CLIENT_SECRET
+# Worker de la base D1 y del inicio de sesión con usuario y contraseña.
+# El id de D1 no es un secreto.
+# Los secretos GITHUB_CLIENT_ID y GITHUB_CLIENT_SECRET ya no se usan.
+# Edgar puede borrarlos después en Cloudflare; no hace falta tocarlos para este cambio.
 name = "hojadevida-oauth"
 main = "src/index.js"
 compatibility_date = "2026-11-01"
@@ -10,6 +10,5 @@ workers_dev = true
 [[d1_databases]]
 binding = "DB"
 database_name = "hojadevida"
-# Pegue aquí el database_id que imprime `wrangler d1 create hojadevida`.
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "e2af3db8-e3bc-4041-b000-ab837c4e0fce"
 migrations_dir = "migrations"

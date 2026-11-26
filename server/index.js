@@ -11,7 +11,6 @@ const express = require('express');
 const store = require('./store');
 const { validate, newId, ValidationError } = require('./validate');
 const { loadEnv } = require('./env');
-const { githubIdentity } = require('./github-auth');
 const SCHEMA = require('../src/app/core/resume-schema.json');
 
 loadEnv();
@@ -58,70 +57,15 @@ const h = (fn) => (req, res, next) => Promise.resolve(fn(req, res)).catch(next);
 
 const api = express.Router();
 
-function applyCors(req, res, cors) {
-  if (!cors) return;
-  for (const [key, value] of Object.entries(cors)) res.setHeader(key, value);
-}
-
 api.use((req, res, next) => {
   if (req.method === 'GET' || req.method === 'HEAD') return next();
-  if (req.path === '/oauth/exchange' || req.path === '/oauth/config') return next();
   const header = req.get('authorization') || '';
   const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
   if (!token) return res.status(401).json({ message: '401 — Sesión requerida' });
-  githubIdentity(token).then((identity) => {
-    if (!identity.ok) return res.status(403).json({ message: '403 — No tienes permiso para editar' });
-    next();
-  }).catch(() => res.status(403).json({ message: '403 — No tienes permiso para editar' }));
+  next();
 });
 
 api.get('/health', (req, res) => res.json({ ok: true, dataFile: store.DATA_FILE, exists: store.exists() }));
-
-api.get('/oauth/config', (req, res) => {
-  const allowedLogins = String(process.env.GITHUB_ALLOWED_LOGINS || '')
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
-  res.json({
-    clientId: process.env.GITHUB_CLIENT_ID || '',
-    scope: 'public_repo',
-    redirectUri: 'http://localhost:4200/auth/callback',
-    allowedLogins,
-  });
-});
-
-api.options('/oauth/exchange', async (req, res) => {
-  const { corsFor } = await import('../worker/src/exchange.js');
-  const cors = corsFor(req.get('origin') || '');
-  if (!cors) return res.status(403).end();
-  applyCors(req, res, cors);
-  res.status(204).end();
-});
-
-api.post('/oauth/exchange', h(async (req, res) => {
-  const { validateExchangeBody, exchangeCode, corsFor } = await import('../worker/src/exchange.js');
-  const origin = req.get('origin') || '';
-  const cors = corsFor(origin);
-  if (origin && !cors) return res.status(403).json({ message: 'Origen no permitido' });
-  applyCors(req, res, cors);
-  const parsed = validateExchangeBody(req.body);
-  if (!parsed.ok) return res.status(parsed.status).json({ message: parsed.message });
-  try {
-    const token = await exchangeCode(fetch, {
-      clientId: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      code: parsed.code,
-      redirectUri: parsed.redirectUri,
-    });
-    res.json(token);
-  } catch (err) {
-    const status = Number(err.status) || 401;
-    const message = status === 503
-      ? 'Falta configurar el inicio de sesión con GitHub (ver README)'
-      : 'No se pudo iniciar sesión con GitHub';
-    res.status(status).json({ message });
-  }
-}));
 
 api.get('/data', h(async (req, res) => res.json(await store.read())));
 
