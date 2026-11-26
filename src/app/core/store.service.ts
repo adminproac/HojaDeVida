@@ -5,7 +5,7 @@ import { GithubService } from './github.service';
 import { Person, ResumeDocument, SectionSchema } from './models';
 import { RESUME_SCHEMA } from './resume-schema';
 
-/** In-memory copy of the JSON document. Saves go to the local API or to a GitHub commit. */
+/** In-memory copy of the résumés. Saves go to the local API or to Cloudflare D1. */
 @Injectable({ providedIn: 'root' })
 export class StoreService {
   private data = inject(DataService);
@@ -18,7 +18,7 @@ export class StoreService {
   /** Mutation errors stay here until dismissed or the next successful reload. */
   readonly actionError = signal<string | null>(null);
   readonly mode = this.data.mode;
-  readonly readOnly = computed(() => this.mode() === 'github' && !this.github.hasToken());
+  readonly readOnly = computed(() => this.mode() === 'd1' && !this.github.hasToken());
 
   readonly schema = computed(() => RESUME_SCHEMA);
   readonly people = computed<Person[]>(() => this.doc()?.people ?? []);

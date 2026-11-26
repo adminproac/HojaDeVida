@@ -209,7 +209,7 @@ export class PdfImportComponent {
     try {
       const saved = await this.data.importPerson(body);
       await this.store.load();
-      this.toast.show(this.i18n.t(this.store.mode() === 'github' ? (replaceId ? 'savedGithub' : 'createdGithub') : (replaceId ? 'saved' : 'created')));
+      this.toast.show(this.i18n.t(replaceId ? 'saved' : 'created'));
       this.router.navigate(['/people', saved.id]);
     } catch (e) {
       const errors = apiFieldErrors(e);
@@ -219,7 +219,7 @@ export class PdfImportComponent {
       ];
       const text = `${this.i18n.t('serverError')} ${rest.join(' ') || errorText(e)}`;
       this.saveError.set(text);
-      if (this.store.mode() === 'github') this.store.actionError.set(text);
+      if (this.store.mode() === 'd1') this.store.actionError.set(text);
     } finally {
       this.saving.set(false);
     }

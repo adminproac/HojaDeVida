@@ -97,7 +97,7 @@ export class PersonViewComponent {
 
   private showError(e: unknown) {
     const text = `${this.i18n.t('serverError')} ${errorText(e)}`;
-    if (this.store.mode() === 'github') this.store.actionError.set(text);
+    if (this.store.mode() === 'd1') this.store.actionError.set(text);
     else this.toast.show(text, 'danger');
   }
 

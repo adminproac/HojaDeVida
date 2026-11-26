@@ -95,8 +95,8 @@ export class App {
 
   /** GitHub failures stay on screen with the HTTP status and the GitHub message. */
   fail(e: unknown, fallback: string) {
-    const text = this.store.mode() === 'github' ? `${this.i18n.t('serverError')} ${errorText(e)}` : fallback;
-    if (this.store.mode() === 'github') this.store.actionError.set(text);
+    const text = this.store.mode() === 'd1' ? `${this.i18n.t('serverError')} ${errorText(e)}` : fallback;
+    if (this.store.mode() === 'd1') this.store.actionError.set(text);
     else this.toast.show(text, 'danger');
   }
 }

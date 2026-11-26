@@ -1,8 +1,15 @@
-# Proxy mínimo para canjear el código de GitHub OAuth.
-# El Client ID y el Client Secret NO van aquí: se cargan con
+# Worker de OAuth y de la base D1.
+# Secretos (no van en este archivo):
 #   wrangler secret put GITHUB_CLIENT_ID
 #   wrangler secret put GITHUB_CLIENT_SECRET
 name = "hojadevida-oauth"
 main = "src/index.js"
 compatibility_date = "2026-11-01"
 workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "hojadevida"
+# Pegue aquí el database_id que imprime `wrangler d1 create hojadevida`.
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"

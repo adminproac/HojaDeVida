@@ -128,7 +128,7 @@
         @if (store.apiError()) {
           <div class="alert alert-danger d-print-none" role="alert">
             <div class="d-flex align-items-center justify-content-between">
-              <span><i class="fas fa-plug mr-2"></i>{{ (store.mode() === 'github' ? 'githubReadError' : 'apiDown') | t }}</span>
+              <span><i class="fas fa-plug mr-2"></i>{{ (store.mode() === 'd1' ? 'd1ReadError' : 'apiDown') | t }}</span>
               <button type="button" class="btn btn-sm btn-light" (click)="store.load()">{{ 'retry' | t }}</button>
             </div>
             @if (store.loadError(); as detail) { <div class="small mt-2 mb-0">{{ detail }}</div> }
