@@ -1,10 +1,14 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 
-/** GitHub OAuth token for this tab. Memory only; sent to the local API, never stored. */
+/** Opaque session token for this tab. Also kept in sessionStorage by SessionService. */
 let apiSessionToken: string | null = null;
 
 export function setApiSessionToken(token: string | null) {
   apiSessionToken = token;
+}
+
+export function getApiSessionToken() {
+  return apiSessionToken;
 }
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {

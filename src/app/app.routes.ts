@@ -12,6 +12,6 @@ export const routes: Routes = [
   { path: 'people/:id/:section/:itemId', loadComponent: () => import('./pages/item-form.component').then((m) => m.ItemFormComponent) },
   { path: 'schema', loadComponent: () => import('./pages/schema-view.component').then((m) => m.SchemaViewComponent) },
   { path: 'import', loadComponent: () => import('./pages/pdf-import.component').then((m) => m.PdfImportComponent) },
-  { path: 'auth/callback', loadComponent: () => import('./pages/oauth-callback.component').then((m) => m.OauthCallbackComponent) },
+  { path: 'users', loadComponent: () => import('./pages/users.component').then((m) => m.UsersComponent) },
   { path: '**', redirectTo: 'dashboard' },
 ];

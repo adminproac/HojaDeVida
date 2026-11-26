@@ -3,7 +3,7 @@ import { environment } from '../../environments/environment';
 import { ApiService } from './api.service';
 import { createItem, createPerson, deleteItem, deletePerson, importPerson, moveItem, updateItem, updateProfile } from './document-mutations';
 import { DataError } from './data-error';
-import { GithubService } from './github.service';
+import { getApiSessionToken } from './auth.interceptor';
 import { Person, Profile, ResumeDocument, SectionItem } from './models';
 
 export type StorageMode = 'detecting' | 'api' | 'd1';
@@ -15,7 +15,6 @@ export type StorageMode = 'detecting' | 'api' | 'd1';
 @Injectable({ providedIn: 'root' })
 export class DataService {
   private api = inject(ApiService);
-  private github = inject(GithubService);
 
   readonly mode = signal<StorageMode>('detecting');
   private detecting: Promise<'api' | 'd1'> | null = null;
@@ -115,7 +114,7 @@ export class DataService {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (method !== 'GET' && method !== 'HEAD') {
-      const token = this.github.token();
+      const token = getApiSessionToken();
       if (!token) throw new DataError(401, '401 — Sesión requerida');
       headers['Authorization'] = `Bearer ${token}`;
     }
