@@ -8,7 +8,7 @@
       "es"
     ],
     "source": "CV PDF provided by the owner (JESUS EDGAR DUARTE)",
-    "lastUpdated": "2026-11-25T23:58:20.607Z"
+    "lastUpdated": "2026-11-26T00:02:45.473Z"
   },
   "people": [
     {
@@ -901,6 +901,158 @@
         }
       ],
       "experience": [],
+      "otherExperience": [],
+      "education": [],
+      "skills": [],
+      "languages": [],
+      "certifications": [],
+      "additionalInfo": []
+    },
+    {
+      "id": "person-8db1eafe",
+      "createdAt": "2026-11-26T00:02:45.473Z",
+      "updatedAt": "2026-11-26T00:02:45.473Z",
+      "profile": {
+        "fullName": "ALEXANDER CORTÉS",
+        "headline": {
+          "en": "",
+          "es": "Director Creativo Orfebre Consultor y Gestor en Dise ñ o"
+        },
+        "email": "pepitoperez@gmail.com",
+        "phone": null,
+        "location": null,
+        "website": null,
+        "photoUrl": null
+      },
+      "summary": [
+        {
+          "id": "sum-723e8ec2",
+          "order": 1,
+          "createdAt": "2026-11-26T00:02:45.473Z",
+          "updatedAt": "2026-11-26T00:02:45.473Z",
+          "text": {
+            "en": "Orfebre y Director Creativo con 20 a ñ os de experiencia integrando el o fi cio artesanal con el dise ñ o de concepto contempor á neo . Especialista en la recuperaci ó n de t é cnicas ancestrales , reconocido por desarrollar un lenguaje propio que conjuga y adapta lo legendario de estas pr á cticas con las din á micas actuales del mercado global . Cuenta con una s ó lida trayectoria en la ense ñ anza y transferencia de conocimiento desde 2017 con diversas comunidades en Colombia . Actualmente se desempe ñ a como Director Creativo del Programa Nacional de Joyer í a en Artesan í as de Colombia , liderando procesos de co - creaci ó n e investigaci ó n . Miembro destacado de la Homo Faber Guide ( Fundaci ó n Michelangelo , Ginebra - Suiza ), reconocimiento que avala su excelencia artesanal a nivel mundial , sello de calidad muy valorado en la academia europea y de alta moda . Adem á s de la gesti ó n y desarrollo de proyectos de di á logo y capacitaci ó n dirigidos a poblaci ó n que requiere atenci ó n especial al interior del pa í s . ÁREAS DE EXPERIENCIA Direcci ó n Creativa y Desarrollo de Producto . Dise ñ o de Joyer í a y Orfebrer í a Contempor á nea . Consultor í a para el sector moda . Investigaci ó n en T é cnicas Ancestrales y Patrimonio . Docencia y Talleres de Co - creaci ó n Comunitaria . Gesti ó n de Marca y Proyecci ó n Internacional .",
+            "es": "Orfebre y Director Creativo con 20 a ñ os de experiencia integrando el o fi cio artesanal con el dise ñ o de concepto contempor á neo . Especialista en la recuperaci ó n de t é cnicas ancestrales , reconocido por desarrollar un lenguaje propio que conjuga y adapta lo legendario de estas pr á cticas con las din á micas actuales del mercado global . Cuenta con una s ó lida trayectoria en la ense ñ anza y transferencia de conocimiento desde 2017 con diversas comunidades en Colombia . Actualmente se desempe ñ a como Director Creativo del Programa Nacional de Joyer í a en Artesan í as de Colombia , liderando procesos de co - creaci ó n e investigaci ó n . Miembro destacado de la Homo Faber Guide ( Fundaci ó n Michelangelo , Ginebra - Suiza ), reconocimiento que avala su excelencia artesanal a nivel mundial , sello de calidad muy valorado en la academia europea y de alta moda . Adem á s de la gesti ó n y desarrollo de proyectos de di á logo y capacitaci ó n dirigidos a poblaci ó n que requiere atenci ó n especial al interior del pa í s . ÁREAS DE EXPERIENCIA Direcci ó n Creativa y Desarrollo de Producto . Dise ñ o de Joyer í a y Orfebrer í a Contempor á nea . Consultor í a para el sector moda . Investigaci ó n en T é cnicas Ancestrales y Patrimonio . Docencia y Talleres de Co - creaci ó n Comunitaria . Gesti ó n de Marca y Proyecci ó n Internacional ."
+          }
+        }
+      ],
+      "experience": [
+        {
+          "id": "exp-28fa47d5",
+          "order": 1,
+          "createdAt": "2026-11-26T00:02:45.473Z",
+          "updatedAt": "2026-11-26T00:02:45.473Z",
+          "company": "Direcci ó n de una marca que es referente",
+          "title": {
+            "en": "la orfebrer í a colombiana , reconocida por generar nuevos",
+            "es": "la orfebrer í a colombiana , reconocida por generar nuevos"
+          },
+          "location": {
+            "en": "",
+            "es": "paradigmas en la interpretaci ó n del o fi cio y su comunicaci ó n global ."
+          },
+          "startDate": null,
+          "endDate": null,
+          "isCurrent": true,
+          "dateLabel": {
+            "en": "",
+            "es": "2012"
+          },
+          "highlights": []
+        },
+        {
+          "id": "exp-a049d60f",
+          "order": 2,
+          "createdAt": "2026-11-26T00:02:45.473Z",
+          "updatedAt": "2026-11-26T00:02:45.473Z",
+          "company": "Exposiciones Muse í sticas : Sus piezas han sido exhibidas",
+          "title": {
+            "en": "el Museo de Arte Moderno de Bogot á",
+            "es": "el Museo de Arte Moderno de Bogot á"
+          },
+          "location": {
+            "en": "",
+            "es": "( MAMBO ) entre 2019 y 2022 , validando el dise ñ o como expresi ó n art í stica ."
+          },
+          "startDate": null,
+          "endDate": null,
+          "isCurrent": false,
+          "dateLabel": {
+            "en": "",
+            "es": "2015 – 2016 – 2017 – 2018 – 2019"
+          },
+          "highlights": []
+        },
+        {
+          "id": "exp-23a5df29",
+          "order": 3,
+          "createdAt": "2026-11-26T00:02:45.473Z",
+          "updatedAt": "2026-11-26T00:02:45.473Z",
+          "company": "Transferencia de conocimiento a diversas comunidades orfebres , capacitaci ó n y asesor í a uno a uno ,",
+          "title": {
+            "en": "de manera presencial y virtual a talleres y marcas del sector moda al alrededor de los 32",
+            "es": "de manera presencial y virtual a talleres y marcas del sector moda al alrededor de los 32"
+          },
+          "location": {
+            "en": "",
+            "es": "departamentos del pa í s ."
+          },
+          "startDate": null,
+          "endDate": null,
+          "isCurrent": true,
+          "dateLabel": {
+            "en": "",
+            "es": "2017"
+          },
+          "highlights": []
+        },
+        {
+          "id": "exp-168b6d03",
+          "order": 4,
+          "createdAt": "2026-11-26T00:02:45.473Z",
+          "updatedAt": "2026-11-26T00:02:45.473Z",
+          "company": "Liderazgo estrat é gico",
+          "title": {
+            "en": "la identi fi caci ó n y fortalecimiento del sector orfebre nacional , enfoc á ndose",
+            "es": "la identi fi caci ó n y fortalecimiento del sector orfebre nacional , enfoc á ndose"
+          },
+          "location": {
+            "en": "",
+            "es": "preservaci ó n del o fi cio y la innovaci ó n en dise ñ o ."
+          },
+          "startDate": null,
+          "endDate": null,
+          "isCurrent": true,
+          "dateLabel": {
+            "en": "",
+            "es": "2023"
+          },
+          "highlights": []
+        },
+        {
+          "id": "exp-97ca51f5",
+          "order": 5,
+          "createdAt": "2026-11-26T00:02:45.473Z",
+          "updatedAt": "2026-11-26T00:02:45.473Z",
+          "company": "Documental Ministerio de Cultura y Cine Colombia : Participaci ó n como protagonista / experto",
+          "title": {
+            "en": "el",
+            "es": "el"
+          },
+          "location": {
+            "en": "",
+            "es": "documental enfocado en la preservaci ó n de los o fi cios nacionales y el patrimonio inmaterial , 2025 ."
+          },
+          "startDate": null,
+          "endDate": null,
+          "isCurrent": true,
+          "dateLabel": {
+            "en": "",
+            "es": "2025"
+          },
+          "highlights": []
+        }
+      ],
       "otherExperience": [],
       "education": [],
       "skills": [],
