@@ -11,6 +11,7 @@ import { pbkdf2, randomBytes } from 'node:crypto';
 import { writeFileSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
+import { wranglerLaunch } from '../src/wrangler-launch.js';
 
 const ITERATIONS = 100_000;
 const SQL_FILE = path.resolve('create-admin.sql');
@@ -45,24 +46,19 @@ try {
   }
 
   writeFileSync(SQL_FILE, sql);
-  const args = ['d1', 'execute', 'hojadevida', local ? '--local' : '--remote', '--file', SQL_FILE];
-  let code = await run('wrangler', args, process.platform === 'win32');
-  if (code === -1) code = await run('npx', ['--yes', 'wrangler@4', ...args], process.platform === 'win32');
+  const flag = local ? '--local' : '--remote';
+  const code = await runWrangler(flag, SQL_FILE);
   if (code === 0) {
     rmSync(SQL_FILE, { force: true });
     console.log(`Usuario administrador ${username} creado. La contraseña no quedó en texto plano.`);
     process.exit(0);
   }
-  console.error('');
-  console.error('wrangler no pudo ejecutar el archivo. En esta misma carpeta (worker) ejecute:');
-  console.error(`wrangler d1 execute hojadevida ${local ? '--local' : '--remote'} --file .\\create-admin.sql`);
-  console.error('El archivo create-admin.sql solo tiene el hash, no la contraseña. Bórrelo después.');
+  printFallback(flag);
   process.exit(code || 1);
 } catch (err) {
   console.error('No se pudo crear el usuario.');
   console.error(err instanceof Error ? err.message : err);
-  console.error('Vuelva a intentarlo pasando la contraseña:');
-  console.error('node scripts/create-user.mjs edgar "su contraseña"');
+  printFallback(process.argv.includes('--local') ? '--local' : '--remote');
   process.exit(1);
 }
 
@@ -70,10 +66,30 @@ function sqlText(value) {
   return String(value).replaceAll("'", "''");
 }
 
-function run(command, args, useShell) {
+function printFallback(flag) {
+  console.error('');
+  console.error('Si wrangler no terminó, en esta misma carpeta (worker) ejecute:');
+  console.error(`wrangler d1 execute hojadevida ${flag} --file .\\create-admin.sql`);
+  console.error('create-admin.sql solo tiene el hash, no la contraseña. Bórrelo después.');
+}
+
+function runWrangler(flag, file) {
+  const plan = wranglerLaunch(process.platform, flag, file);
   return new Promise((resolve) => {
-    const child = spawn(command, args, { stdio: 'inherit', shell: useShell, windowsHide: false });
-    child.on('error', () => resolve(-1));
+    let child;
+    try {
+      child = plan.args.length
+        ? spawn(plan.command, plan.args, { stdio: 'inherit', shell: plan.shell, windowsHide: false })
+        : spawn(plan.command, { stdio: 'inherit', shell: true, windowsHide: false });
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      resolve(1);
+      return;
+    }
+    child.on('error', (err) => {
+      console.error(err instanceof Error ? err.message : err);
+      resolve(1);
+    });
     child.on('exit', (status) => resolve(status ?? 1));
   });
 }

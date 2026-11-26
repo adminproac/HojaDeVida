@@ -5,6 +5,7 @@ import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { handleDataRequest } from './src/api.js';
+import { wranglerLaunch } from './src/wrangler-launch.js';
 import { login, sessionUser } from './src/auth.js';
 import { pbkdf2, randomBytes } from 'node:crypto';
 import { promisify } from 'node:util';
@@ -74,6 +75,20 @@ test('login creates a session, slides it, and locks after 5 failures', async () 
   }
   await assert.rejects(() => login(db, 'edgar', 'mala', started), /15 minutos/);
   await assert.rejects(() => login(db, 'edgar', 'clave-larga', started + 1000), /15 minutos/);
+});
+
+test('Windows launches wrangler through cmd.exe, not wrangler.cmd', () => {
+  const file = 'C:\\Users\\Edgar\\My Folder\\create-admin.sql';
+  const plan = wranglerLaunch('win32', '--remote', file);
+  assert.equal(plan.shell, true);
+  assert.equal(plan.args.length, 0);
+  assert.equal(plan.command.startsWith('wrangler d1 execute hojadevida --remote --file '), true);
+  assert.equal(plan.command.includes('wrangler.cmd'), false);
+  assert.equal(plan.command.includes(`"${file}"`), true);
+  const unix = wranglerLaunch('linux', '--remote', '/tmp/create-admin.sql');
+  assert.equal(unix.shell, false);
+  assert.equal(unix.command, 'wrangler');
+  assert.deepEqual(unix.args, ['d1', 'execute', 'hojadevida', '--remote', '--file', '/tmp/create-admin.sql']);
 });
 
 test('the worker rejects a resume write without a session', async () => {
