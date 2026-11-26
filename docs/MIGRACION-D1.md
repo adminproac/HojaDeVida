@@ -1,6 +1,16 @@
 # Pasar las hojas de vida a Cloudflare D1
 
-Haga estos pasos en orden, en PowerShell. No cambie el orden. No hace falta un secreto nuevo: los de GitHub que ya puso en el Worker siguen igual.
+Si el seed remoto falló con `BEGIN TRANSACTION`, no vuelva a crear la base ni a aplicar las migraciones. Solo esto:
+
+```powershell
+cd C:\Personal\Boss\HojaDeVida
+git checkout cursor/cloudflare-d1-6deb
+git pull origin cursor/cloudflare-d1-6deb
+cd worker
+wrangler d1 execute hojadevida --remote --file=.\seed.sql
+```
+
+El resto de esta página es la primera vez, en orden. No hace falta un secreto nuevo: los de GitHub que ya puso en el Worker siguen igual.
 
 La rama es `cursor/cloudflare-d1-6deb`. El sitio en vivo no cambia hasta que esa rama se fusione.
 

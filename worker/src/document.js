@@ -327,13 +327,12 @@ export function sqlLiteral(value) {
 
 export function renderSeed(doc) {
   const plans = insertPlans(rowsFromDocument(doc));
-  const lines = ['BEGIN TRANSACTION;'];
+  const lines = CLEAR_SQL.map((sql) => `${sql};`);
   for (const plan of plans) {
     let index = 0;
     const sql = plan.sql.replaceAll('?', () => sqlLiteral(plan.params[index++]));
     lines.push(`${sql};`);
   }
-  lines.push('COMMIT;');
   return `${lines.join('\n')}\n`;
 }
 

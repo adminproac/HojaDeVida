@@ -11,10 +11,15 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const original = JSON.parse(readFileSync(path.join(root, 'Data/resume-data.json'), 'utf8'));
 
 test('the seed round-trips every person through SQLite', () => {
+  const sql = renderSeed(original);
+  assert.equal(/\bBEGIN\b|\bCOMMIT\b|\bSAVEPOINT\b|PRAGMA/i.test(sql), false);
+  const migration = readFileSync(path.join(root, 'worker/migrations/0001_init.sql'), 'utf8');
+  assert.equal(/\bBEGIN\b|\bCOMMIT\b|\bSAVEPOINT\b|PRAGMA/i.test(migration), false);
   const db = new DatabaseSync(':memory:');
   db.exec('PRAGMA foreign_keys = ON');
-  db.exec(readFileSync(path.join(root, 'worker/migrations/0001_init.sql'), 'utf8'));
-  db.exec(renderSeed(original));
+  db.exec(migration);
+  db.exec(sql);
+  db.exec(sql);
   const read = (sql) => db.prepare(sql).all();
   const doc = documentFromRows({
     meta: read('SELECT * FROM document_meta')[0],

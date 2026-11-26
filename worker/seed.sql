@@ -1,4 +1,15 @@
-BEGIN TRANSACTION;
+DELETE FROM skill_item;
+DELETE FROM skill_group;
+DELETE FROM job_highlight;
+DELETE FROM job;
+DELETE FROM education_item;
+DELETE FROM summary_item;
+DELETE FROM spoken_language;
+DELETE FROM certification;
+DELETE FROM note_item;
+DELETE FROM person;
+DELETE FROM document_language;
+DELETE FROM document_meta;
 INSERT INTO document_meta (id, schema_version, app_name, default_language, source_note, last_updated) VALUES (1, '3.0.0', 'Resume Admin', 'es', 'CV PDF provided by the owner (JESUS EDGAR DUARTE)', '2026-11-25T22:50:27.634Z');
 INSERT INTO document_language (meta_id, language_code) VALUES (1, 'en');
 INSERT INTO document_language (meta_id, language_code) VALUES (1, 'es');
@@ -96,4 +107,3 @@ INSERT INTO note_item (id, person_id, sort_order, created_at, updated_at, text_e
 INSERT INTO note_item (id, person_id, sort_order, created_at, updated_at, text_en, text_es) VALUES ('info-002', 'person-001', 2, '2026-11-23T22:55:00.000Z', '2026-11-23T22:55:00.000Z', 'Driver''s license with Real ID', 'Licencia de conducir con Real ID');
 INSERT INTO note_item (id, person_id, sort_order, created_at, updated_at, text_en, text_es) VALUES ('info-003', 'person-001', 3, '2026-11-23T22:55:00.000Z', '2026-11-23T22:55:00.000Z', 'Available for full-time and overtime', 'Disponible para jornada completa y horas extras');
 INSERT INTO note_item (id, person_id, sort_order, created_at, updated_at, text_en, text_es) VALUES ('info-004', 'person-001', 4, '2026-11-23T22:55:00.000Z', '2026-11-23T22:55:00.000Z', 'Flexible schedule', 'Horario flexible');
-COMMIT;
