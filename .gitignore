@@ -51,3 +51,6 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Base local de Wrangler (D1). No se sube.
+worker/.wrangler/

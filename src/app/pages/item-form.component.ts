@@ -93,14 +93,14 @@ export class ItemFormComponent implements OnInit {
       if (this.isNew()) await this.data.createItem(this.id(), s.key, body);
       else await this.data.updateItem(this.id(), s.key, this.itemId()!, body);
       await this.store.load();
-      const key = this.store.mode() === 'github' ? (this.isNew() ? 'createdGithub' : 'savedGithub') : (this.isNew() ? 'created' : 'saved');
+      const key = this.isNew() ? 'created' : 'saved';
       this.toast.show(this.i18n.t(key));
       this.router.navigate(['/people', this.id()], { fragment: s.key });
     } catch (e) {
       const rest = applyServerErrors(f, apiFieldErrors(e), s.key);
       const text = `${this.i18n.t('serverError')} ${rest.join(' ') || errorText(e)}`;
       this.formError.set(text);
-      if (this.store.mode() === 'github') this.store.actionError.set(text);
+      if (this.store.mode() === 'd1') this.store.actionError.set(text);
     } finally {
       this.saving.set(false);
     }

@@ -106,6 +106,7 @@ const DICT = {
   },
   githubLastCommit: { en: 'Last commit', es: 'Último commit' },
   githubReadError: { en: 'Could not read Data/resume-data.json from GitHub.', es: 'No se pudo leer Data/resume-data.json desde GitHub.' },
+  d1ReadError: { en: 'Could not read the résumés from the database.', es: 'No se pudieron leer las hojas de vida desde la base de datos.' },
   localMode: { en: 'Local API', es: 'API local' },
   dismiss: { en: 'Dismiss', es: 'Cerrar' },
   savedGithub: { en: 'Saved to GitHub. This page already shows the new data.', es: 'Guardado en GitHub. Esta página ya muestra los datos nuevos.' },

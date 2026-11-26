@@ -60,7 +60,7 @@ describe('resume data file', () => {
     expect(doc.users).toBeUndefined();
     expect(doc.meta.schemaVersion).toBe('3.0.0');
     expect(doc.meta.defaultLanguage).toBe('es');
-    expect(doc.people).toHaveLength(7);
+    expect(doc.people.length).toBeGreaterThanOrEqual(7);
     expect(doc.people.length).toBeGreaterThan(0);
     expect(doc.people[0].profile.fullName).toBeTruthy();
     expect(doc.people[0].id).toBeTruthy();

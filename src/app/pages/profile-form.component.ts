@@ -78,14 +78,14 @@ export class ProfileFormComponent implements OnInit {
       const value = f.getRawValue();
       const saved = this.isNew() ? await this.data.createPerson(value) : await this.data.updateProfile(this.id()!, value);
       await this.store.load();
-      const key = this.store.mode() === 'github' ? (this.isNew() ? 'createdGithub' : 'savedGithub') : (this.isNew() ? 'created' : 'saved');
+      const key = this.isNew() ? 'created' : 'saved';
       this.toast.show(this.i18n.t(key));
       this.router.navigate(['/people', saved.id]);
     } catch (e) {
       const rest = applyServerErrors(f, apiFieldErrors(e), 'profile');
       const text = `${this.i18n.t('serverError')} ${rest.join(' ') || errorText(e)}`;
       this.formError.set(text);
-      if (this.store.mode() === 'github') this.store.actionError.set(text);
+      if (this.store.mode() === 'd1') this.store.actionError.set(text);
     } finally {
       this.saving.set(false);
     }
