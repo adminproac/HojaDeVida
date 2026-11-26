@@ -34,13 +34,17 @@ wrangler d1 migrations apply hojadevida --remote
 
 Confirme con `y` si se lo pide.
 
-5. Cree su usuario administrador. La contraseña se ve en la pantalla. No la copie a un archivo.
+5. Cree su usuario administrador. La forma que funciona en PowerShell es pasar la contraseña en la misma línea (se ve en la pantalla; no la guarde en un archivo):
 
 ```powershell
-node scripts/create-user.mjs edgar
+node scripts/create-user.mjs edgar "su contraseña"
 ```
 
-Escriba la contraseña cuando lo pida y pulse Enter. El script la guarda cifrada en D1.
+Si prefiere que el script la pregunte, use `node scripts/create-user.mjs edgar` y escríbala cuando aparezca el texto. Si wrangler no arranca solo, el script deja `create-admin.sql` y muestra este comando para copiarlo:
+
+```powershell
+wrangler d1 execute hojadevida --remote --file .\create-admin.sql
+```
 
 6. Publique el Worker:
 

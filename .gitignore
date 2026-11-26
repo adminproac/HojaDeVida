@@ -54,3 +54,4 @@ Thumbs.db
 
 # Base local de Wrangler (D1). No se sube.
 worker/.wrangler/
+worker/create-admin.sql

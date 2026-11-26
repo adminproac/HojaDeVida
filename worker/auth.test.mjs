@@ -6,6 +6,8 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { handleDataRequest } from './src/api.js';
 import { login, sessionUser } from './src/auth.js';
+import { pbkdf2, randomBytes } from 'node:crypto';
+import { promisify } from 'node:util';
 import { PBKDF2_ITERATIONS, hashPassword } from './src/password.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -41,6 +43,10 @@ test('hashes a password with PBKDF2 and does not keep the plaintext', async () =
   assert.equal(hashed.passwordHash.includes('clave-larga'), false);
   const again = await hashPassword('clave-larga', hashed.salt);
   assert.equal(again.passwordHash, hashed.passwordHash);
+  const salt = randomBytes(16);
+  const nodeHash = (await promisify(pbkdf2)('clave-larga', salt, PBKDF2_ITERATIONS, 32, 'sha256')).toString('base64');
+  const web = await hashPassword('clave-larga', salt.toString('base64'));
+  assert.equal(web.passwordHash, nodeHash);
 });
 
 test('login creates a session, slides it, and locks after 5 failures', async () => {
